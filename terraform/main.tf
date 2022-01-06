@@ -14,9 +14,8 @@ locals {
   # or what I do is just update the SG in AWS console if I move to a different location.
   myip = "${chomp(data.http.myip.body)}/32"
 
-  # Get the last available AZ. I find the first ones get inundated first, so this is a decent way shoot for capacity.
   # Note, only one subnet (for that AZ) is created in this file. Should I add more, eg if you can't find capacity for your launched instance?
-  az = element(data.aws_availability_zones.available.names, length(data.aws_availability_zones.available.names) - 1)
+  az = element(data.aws_availability_zones.available.names, 0)
 }
 
 data "aws_ami" "nice_dcv" {
@@ -114,19 +113,13 @@ module "ec2" {
   spot_price = var.spot_price
   spot_instance_interruption_behavior	 = var.spot_price == null ? null : "stop"
 
-  tags = var.tags
-}
+  root_block_device = [
+    {
+      volume_type = var.volume_type
+      volume_size = var.volume_size
+    },
+  ]
 
-resource "aws_volume_attachment" "this" {
-  device_name = "/dev/sda1"
-  volume_id   = aws_ebs_volume.this.id
-  instance_id = module.ec2.id
-}
-
-resource "aws_ebs_volume" "this" {
-  availability_zone = local.az
-  size              = var.volume_size
-  type = var.volume_type
   tags = var.tags
 }
 
