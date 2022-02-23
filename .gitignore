@@ -1,1 +1,3 @@
 terraform-mine/
+.terraform*
+.idea

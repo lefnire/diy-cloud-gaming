@@ -6,7 +6,7 @@ output "connection-info" {
   value = <<-EOF
   IP: ${aws_eip.eip.public_ip}
   Username: Administrator
-  Password: ${rsadecrypt(module.ec2.password_data,file(var.pem_file))}
+  Password: ${rsadecrypt(module.ec2.password_data,file("./${var.namespace}.pem"))}
 
   Later, when you're done gaming, run:
   aws ec2 stop-instances --instance-ids ${module.ec2.id}

@@ -3,21 +3,9 @@ variable "namespace" {
   default = "diy-cloud-gaming"
 }
 
-variable "tags" {
-  type = any
-  default = {}
-}
-
 variable "region" {
   type = string
   default = "us-west-2"
-}
-
-variable "key_name" {
-  type = string
-}
-variable "pem_file" {
-  type = string
 }
 
 variable "instance_type" {
@@ -38,4 +26,13 @@ variable "volume_size" {
 variable "volume_type" {
   type = string
   default = "gp3"
+}
+
+variable "my_ip" {
+  type = string
+}
+
+variable "tags" {
+  type = any
+  default = {}
 }

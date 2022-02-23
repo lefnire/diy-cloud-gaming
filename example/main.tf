@@ -1,38 +1,29 @@
 locals {
   region = "us-west-2"
   namespace = "diy-cloud-gaming"
+  tags = {
+    Name = local.namespace
+  }
+}
+
+data "http" "my_ip" {
+  url = "http://ipv4.icanhazip.com"
 }
 
 provider "aws" {
   region  = local.region
-
-  # Make it faster by skipping some things
-  skip_get_ec2_platforms      = true
-  skip_metadata_api_check     = true
-  skip_region_validation      = true
-  skip_credentials_validation = true
-
-  # skip_requesting_account_id should be disabled to generate valid ARN in apigatewayv2_api_execution_arn
-  skip_requesting_account_id = false
 }
 
 module "diy-gaming" {
   source = "../terraform"
 
+  # Security groups are only opened for the IP address of the computer you're running `apply` from. You can change this below,
+  # or what I do is just update the SG in AWS console if I move to a different location.
+  my_ip = "${chomp(data.http.my_ip.body)}/32"
+
   # Namespace & tags will help you identify your resources later (know what to 
   # terminate, observe AWS costs by this service, etc)
   namespace = local.namespace
-  tags = {
-    Name = local.namespace
-  }
-
-  # This is required, and you'll need to do it manually through AWS-console. 
-  # Go to console.aws.com > EC2 > Key Pairs > Create key pair. Make sure you're
-  # in the region you're using for this file (top-right on AWS). Save the file,
-  # eg to ~/.ssh/keypair-name-from-aws-console.pem. Run `chmod 400 <that file>`.
-  # Then fill in these values.
-  key_name = "keypair-name-from-aws-console"
-  pem_file = "/Users/lefnire/.ssh/keypair-name-from-aws-console.pem"
 
   # Where to launch your VPC & instance. Make sure it's the on closest too you!
   region = local.region
@@ -42,6 +33,8 @@ module "diy-gaming" {
   # *.2xlarge for 8vcpu/32gb RAM. IMO, 2xlarge is the sweet spot; less is too 
   # little, more is too much.
   instance_type = "g5.2xlarge"
+  volume_size = 1000
+  volume_type = "gp3"
 
   # If spot_price is null, it will create an on-demand EC2 instance. This is 
   # more expensive, but more stable. Spot instances can save you up to 90% 
@@ -62,6 +55,8 @@ module "diy-gaming" {
   # days. If you want to get started, set below to `null` and do the Spot thing later.
   spot_price = null
   #spot_price = "2.0"
+
+  tags = local.tags
 }
 
 output "connection-info" {

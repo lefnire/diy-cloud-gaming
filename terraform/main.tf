@@ -2,17 +2,9 @@ data "aws_availability_zones" "available" {
   state = "available"
 }
 
-data "http" "myip" {
-  url = "http://ipv4.icanhazip.com"
-}
-
 locals {
   tcp = 6
   udp = 17
-
-  # Security groups are only opened for the IP address of the computer you're running `apply` from. You can change this below,
-  # or what I do is just update the SG in AWS console if I move to a different location.
-  myip = "${chomp(data.http.myip.body)}/32"
 
   # Note, only one subnet (for that AZ) is created in this file. Should I add more, eg if you can't find capacity for your launched instance?
   az = element(data.aws_availability_zones.available.names, 0)
@@ -42,7 +34,26 @@ module "vpc" {
   tags = var.tags
 }
 
-module "security_group" {
+module "sg_my_ip" {
+  source  = "terraform-aws-modules/security-group/aws"
+  version = "~> 4.0"
+
+  name        = var.namespace
+  description = "Proxy: allow all traffic from local/mobile IP. Further restrictions in other SG. Makes updating IP later easier."
+  vpc_id      = module.vpc.vpc_id
+
+  egress_rules        = ["all-all"]
+  ingress_with_cidr_blocks = [
+    {
+      rule        = "all-all"
+      cidr_blocks = var.my_ip
+    },
+  ]
+
+  tags = var.tags
+}
+
+module "sg_ec2" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "~> 4.0"
 
@@ -52,45 +63,66 @@ module "security_group" {
 
   egress_rules        = ["all-all"]
 
-  ingress_with_cidr_blocks = [
+  ingress_with_source_security_group_id = [
     {
       rule        = "ssh-tcp"
-      cidr_blocks = local.myip
+      source_security_group_id = module.sg_my_ip.security_group_id
     },
     {
       rule        = "rdp-tcp"
-      cidr_blocks = local.myip
+      source_security_group_id = module.sg_my_ip.security_group_id
     },
     {
       from_port   = 38810
       to_port     = 38840
       protocol    = local.udp
       description = "Virtual Desktop VR"
-      cidr_blocks = local.myip
+      source_security_group_id = module.sg_my_ip.security_group_id
     },
     {
       from_port   = 38810
       to_port     = 38840
       protocol    = local.tcp
       description = "Virtual Desktop VR"
-      cidr_blocks = local.myip
+      source_security_group_id = module.sg_my_ip.security_group_id
     },
     {
       from_port   = 8443
       to_port     = 8443
       protocol    = local.udp
       description = "NiceDCV QUIC"
-      cidr_blocks = local.myip
+      source_security_group_id = module.sg_my_ip.security_group_id
     },
     {
       from_port   = 8443
       to_port     = 8443
       protocol    = local.tcp
       description = "NiceDCV QUIC"
-      cidr_blocks = local.myip
+      source_security_group_id = module.sg_my_ip.security_group_id
     },
+    {
+      from_port = 8000
+      to_port = 8040
+      protocol = local.udp
+      description = "Parsec"
+      source_security_group_id = module.sg_my_ip.security_group_id
+    }
   ]
 
+  tags = var.tags
+}
+
+resource "tls_private_key" "key" {
+  algorithm = "RSA"
+}
+resource "local_file" "private_key" {
+  filename = "./${var.namespace}.pem"
+  sensitive_content = tls_private_key.key.private_key_pem
+  file_permission = "0400"
+}
+resource "aws_key_pair" "key_pair" {
+  key_name = var.namespace
+  public_key = tls_private_key.key.public_key_openssh
   tags = var.tags
 }
 
@@ -102,10 +134,10 @@ module "ec2" {
 
   ami                    = data.aws_ami.nice_dcv.id
   instance_type          = var.instance_type
-  key_name = var.key_name
+  key_name = aws_key_pair.key_pair.key_name
   availability_zone           = local.az
   subnet_id                   = element(module.vpc.public_subnets, 0)
-  vpc_security_group_ids      = [module.security_group.security_group_id]
+  vpc_security_group_ids      = [module.sg_ec2.security_group_id]
   associate_public_ip_address = true
   get_password_data     =   true
 
@@ -126,5 +158,6 @@ module "ec2" {
 resource "aws_eip" "eip" {
   instance = module.ec2.id
   vpc      = true
+  tags = var.tags
 }
 
