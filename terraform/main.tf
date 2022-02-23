@@ -63,49 +63,49 @@ module "sg_ec2" {
 
   egress_rules        = ["all-all"]
 
-  ingress_with_source_security_group_id = [
+  ingress_with_cidr_blocks = [
     {
       rule        = "ssh-tcp"
-      source_security_group_id = module.sg_my_ip.security_group_id
+      cidr_blocks = var.my_ip
     },
     {
       rule        = "rdp-tcp"
-      source_security_group_id = module.sg_my_ip.security_group_id
+      cidr_blocks = var.my_ip
     },
     {
       from_port   = 38810
       to_port     = 38840
       protocol    = local.udp
       description = "Virtual Desktop VR"
-      source_security_group_id = module.sg_my_ip.security_group_id
+      cidr_blocks = var.my_ip
     },
     {
       from_port   = 38810
       to_port     = 38840
       protocol    = local.tcp
       description = "Virtual Desktop VR"
-      source_security_group_id = module.sg_my_ip.security_group_id
+      cidr_blocks = var.my_ip
     },
     {
       from_port   = 8443
       to_port     = 8443
       protocol    = local.udp
       description = "NiceDCV QUIC"
-      source_security_group_id = module.sg_my_ip.security_group_id
+      cidr_blocks = var.my_ip
     },
     {
       from_port   = 8443
       to_port     = 8443
       protocol    = local.tcp
       description = "NiceDCV QUIC"
-      source_security_group_id = module.sg_my_ip.security_group_id
+      cidr_blocks = var.my_ip
     },
     {
       from_port = 8000
       to_port = 8040
       protocol = local.udp
       description = "Parsec"
-      source_security_group_id = module.sg_my_ip.security_group_id
+      cidr_blocks = var.my_ip
     }
   ]
 
