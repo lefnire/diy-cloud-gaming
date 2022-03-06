@@ -1,3 +1,5 @@
 terraform-mine/
 .terraform*
 .idea
+*.pem
+custom.tf
