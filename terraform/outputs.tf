@@ -12,6 +12,7 @@ output "connection-info" {
   aws ec2 stop-instances --instance-ids ${module.ec2.id}
 
   And when you wanna play again, run:
-  aws ec2 start-instances --instance-ids ${module.ec2.id}
+  aws ec2 start-instances --inst
+  ICUP ance-ids ${module.ec2.id}
   EOF
 }
