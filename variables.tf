@@ -1,24 +1,25 @@
 variable "state" {
   type    = string
-  default = "init"
 
   validation {
-    condition     = contains(["networking","init","snapshot", "down", "up"], var.state)
+    condition     = contains(["networking", "init", "snapshot", "stop", "start"], var.state)
     error_message = "Allowed values for state are init|snapshot|down|up."
   }
+}
+
+variable "ami" {
+  type = string
 }
 
 # Namespace & tags will help you identify your resources later (know what to
 # terminate, observe AWS costs by this service, etc)
 variable "namespace" {
   type = string
-  default = "diy-cloud-gaming"
 }
 
 # Where to launch your VPC & instance. Make sure it's the on closest too you!
 variable "region" {
   type = string
-  default = "us-west-2"
 }
 
 # Security groups are only opened for the IP address of the computer you're running `apply` from. You can change this below,
@@ -26,7 +27,6 @@ variable "region" {
 # List of actual ip addresses, and "mine" will be tranformed ot your current router's IP.
 variable "ip_addresses" {
   type = list(string)
-  default = ["mine"]
 }
 
 # g4dn.2xlarge for cheaper (about $.70/h); g5.2xlarge for stronger (about $1.4/h).
@@ -35,7 +35,6 @@ variable "ip_addresses" {
   # little, more is too much.
 variable "instance_type" {
   type = string
-  default = "g5.2xlarge"
 }
 
 # If spot_price is null, it will create an on-demand EC2 instance. This is
@@ -57,15 +56,12 @@ variable "instance_type" {
 # days. If you want to get started, set below to `null` and do the Spot thing later.
 variable "spot_price" {
   type = string
-  default = null  # "2.0"
 }
 
 variable "volume_size" {
   type = number
-  default = 1000
 }
 
 variable "volume_type" {
   type    = string
-  default = "gp3"
 }

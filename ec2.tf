@@ -31,14 +31,14 @@ module "ec2" {
 
   name = var.namespace
 
-  ami                    = data.aws_ami.nice_dcv.id
+  ami                    = var.ami == "default" ? data.aws_ami.nice_dcv.id : var.ami
   instance_type          = var.instance_type
   key_name = aws_key_pair.key_pair.key_name
   availability_zone           = local.az
   subnet_id                   = element(module.vpc.public_subnets, 0)
   vpc_security_group_ids      = [module.sg_ec2.security_group_id]
   associate_public_ip_address = true
-  get_password_data     =   true
+  get_password_data     =   var.ami == "default"
 
   create_spot_instance = var.spot_price == null ? false : true
   spot_price = var.spot_price
@@ -55,11 +55,16 @@ module "ec2" {
 }
 
 resource "aws_eip" "eip" {
-  count = var.state == "init" ? 1 : 0
-
-  instance = module.ec2[0].id
+  instance = var.state == "init" || var.state == "start" ? module.ec2[0].id : null
   vpc      = true
   tags = local.tags
 }
+
+#resource "aws_ami_from_instance" "snapshot" {
+#  count = var.state == "snapshot" || var.state == "stop" ? 1 : 0
+#  name               = var.namespace
+#  source_instance_id = module.ec2[0].id
+#  tags = local.tags
+#}
 
 
