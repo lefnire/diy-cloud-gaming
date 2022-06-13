@@ -1,0 +1,29 @@
+{
+  "name": "sst",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "sst start",
+    "build": "sst build",
+    "deploy": "sst deploy --stage=production",
+    "remove": "sst remove",
+    "console": "sst console",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@serverless-stack/cli": "^1.2.20",
+    "@serverless-stack/resources": "^1.2.20",
+    "@tsconfig/node16": "^1.0.3",
+    "aws-cdk-lib": "2.24.0",
+    "typescript": "^4.7.3",
+    "vitest": "^0.14.2"
+  },
+  "workspaces": [
+    "backend"
+  ],
+  "dependencies": {
+    "aws-sdk": "^2.1152.0",
+    "uuid": "^8.3.2"
+  }
+}
