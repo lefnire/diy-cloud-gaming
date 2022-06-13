@@ -26,11 +26,10 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   const instanceId = uuid.v1()
 
   const params = {
-    TableName: process.env.TABLE_NAME,
+    TableName: process.env.TABLE_NAME!,
     Item: {
       // The attributes of the item to be created
       userId: "123", // The id of the author
-      instanceId,
       createdAt: Date.now(), // Current Unix timestamp
       ...data
     },
@@ -46,6 +45,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   } catch (e) {
     return {
       statusCode: 500,
+      // @ts-ignore
       body: JSON.stringify({ error: e.message }),
     };
   }

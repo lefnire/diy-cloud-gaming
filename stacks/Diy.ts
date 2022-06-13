@@ -47,10 +47,9 @@ function createApi({stack}: StackContext, tables: TableObj) {
     },
     routes: {
       "GET /instances": "functions/instances/list.handler", // HTTP Verbs (http "protocol")
-      "GET /instances/:instanceId": "functions/instances/get.handler",
       "POST /instances": "functions/instances/create.handler",
     },
-  });
+  })
 
   // Show the API endpoint in the output
   stack.addOutputs({

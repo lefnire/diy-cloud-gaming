@@ -13,6 +13,9 @@ import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
+import FormGroup from '@mui/material/FormGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
 
 
 interface BasicSelectProps {
@@ -78,13 +81,23 @@ export default function Create() {
     })
   }
 
-  function save() {
+  function changeSpot(event: any) {
+    setForm({...form, spot: !form.spot})
+  }
+
+  async function save() {
     // POST to /instances this form, comment out below code
-    addInstance({
-      ...form,
-      instanceId: '123',
-      dateCreated: new Date().toDateString()
+    // HTTP
+    const result = await fetch({
+      url: "http://localhost:3000/instances",
+      method: "POST",
+      body: JSON.stringify(form)
     })
+    // addInstance({
+    //   ...form,
+    //   instanceId: '123',
+    //   dateCreated: new Date().toDateString()
+    // })
     navigate(`/instances`);
   }
 
@@ -114,13 +127,15 @@ export default function Create() {
         value={form.storage}
         onChange={changeText}
       />
-      <TextField
-        fullWidth={true}
-        id="spot"
-        label="Spot"
-        variant="outlined"
-        onChange={changeText}
-      />
+      <FormGroup>
+        <FormControlLabel
+          control={<Checkbox
+            checked={form.spot}
+            onChange={changeSpot}
+          />}
+          label="Spot Instance"
+        />
+      </FormGroup>
       <TextField
         fullWidth={true}
         id="region"
