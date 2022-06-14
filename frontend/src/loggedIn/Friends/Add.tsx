@@ -9,52 +9,52 @@ import TextField from '@mui/material/TextField';
 
 
 export default function Add() {
-  const addFriend = useStore(store => store.addFriend)
+    const addFriend = useStore(store => store.addFriend)
 
-  let navigate = useNavigate();
-  const [form, setForm] = useState({
-    email: '',
-  })
-
-  function changeText(event: any) {
-    const id = event.target.id
-    const value = event.target.value
-    setForm({
-      ...form,
-      [id]: value
+    let navigate = useNavigate();
+    const [form, setForm] = useState({
+        email: '',
     })
-  }
 
-  function save() {
-    addFriend({
-      ...form,
-      username: 'xyz',
-      online: true
-    })
-    navigate(`/friends`);
-  }
+    function changeText(event: any) {
+        const id = event.target.id
+        const value = event.target.value
+        setForm({
+            ...form,
+            [id]: value
+        })
+    }
 
-  return <div>
-    <Box
-      component="form"
-      sx={{
-        '& > :not(style)': { m: 1 },
-      }}
-      noValidate
-      autoComplete="off"
-    >
-      <TextField
-        fullWidth={true}
-        id="email"
-        label="Email of person to add"
-        variant="outlined"
-        value={form.email}
-        onChange={changeText}
-      />
-      <Button
-        variant="contained"
-        onClick={save}
-      >Invite</Button>
-    </Box>
-  </div>
+    function save() {
+        addFriend({
+            ...form,
+            username: 'pendejo',
+            online: true
+        })
+        navigate(`/friends`);
+    }
+
+    return <div>
+        <Box
+            component="form"
+            sx={{
+                '& > :not(style)': { m: 1 },
+            }}
+            noValidate
+            autoComplete="off"
+        >
+            <TextField
+                fullWidth={true}
+                id="email"
+                label="Email of person to add"
+                variant="outlined"
+                value={form.email}
+                onChange={changeText}
+            />
+            <Button
+                variant="contained"
+                onClick={save}
+            >Invite</Button>
+        </Box>
+    </div>
 }

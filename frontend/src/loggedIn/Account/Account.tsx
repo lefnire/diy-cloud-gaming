@@ -7,50 +7,50 @@ import Button from "@mui/material/Button";
 
 
 export default function Account() {
-  let navigate = useNavigate()
-  const user = useStore(store => store.user)
-  const setUser = useStore(store => store.setUser)
-  const setLoggedIn = useStore(store => store.setLoggedIn)
+    let navigate = useNavigate()
+    const user = useStore(store => store.user)
+    const setUser = useStore(store => store.setUser)
+    const setLoggedIn = useStore(store => store.setLoggedIn)
 
-  function closeAccount() {
-    setUser({
-      email: '<deleted>',
-      username: '<deleted>'
-    })
-    setLoggedIn()
-    navigate("/")
-  }
+    function closeAccount() {
+        setUser({
+            email: '<deleted>',
+            username: '<deleted>'
+        })
+        setLoggedIn()
+        navigate("/")
+    }
 
-  return <Grid container direction="column" spacing={2}>
-    <Grid item>
-      <TextField
-        fullWidth
-        disabled
-        id="email"
-        label="Email"
-        defaultValue={user.email}
-      />
+    return <Grid container direction="column" spacing={2}>
+        <Grid item>
+            <TextField
+                fullWidth
+                disabled
+                id="email"
+                label="Email"
+                defaultValue={user.email}
+            />
+        </Grid>
+        <Grid item>
+            <TextField
+                fullWidth={true}
+                id="username"
+                label="Username"
+                defaultValue={user.username}
+            />
+        </Grid>
+        <Grid item>
+            <Button fullWidth variant="contained" component={Link} to="/account/billing">Billing</Button>
+        </Grid>
+        <Grid item>
+            <Button
+                fullWidth
+                variant="contained"
+                color="error"
+                onClick={closeAccount}
+            >
+                Close Account
+            </Button>
+        </Grid>
     </Grid>
-    <Grid item>
-      <TextField
-        fullWidth={true}
-        id="username"
-        label="Username"
-        defaultValue={user.username}
-      />
-    </Grid>
-    <Grid item>
-      <Button fullWidth variant="contained" component={Link} to="/account/billing">Billing</Button>
-    </Grid>
-    <Grid item>
-      <Button
-        fullWidth
-        variant="contained"
-        color="error"
-        onClick={closeAccount}
-      >
-        Close Account
-      </Button>
-    </Grid>
-  </Grid>
 }

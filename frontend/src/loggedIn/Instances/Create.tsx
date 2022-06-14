@@ -13,140 +13,125 @@ import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
-import FormGroup from '@mui/material/FormGroup';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
 
 
 interface BasicSelectProps {
-  id: string
-  label: string
-  item: any
-  setItem: any
-  options: {value: string, label: string}[]
-  form: any
+    id: string
+    label: string
+    item: any
+    setItem: any
+    options: {value: string, label: string}[]
+    form: any
 }
 
 function BasicSelect({id, form, label, item, setItem, options}: BasicSelectProps) {
-  const handleChange = (event: SelectChangeEvent) => {
-    const value = event.target.value as string
-    setItem({
-      ...form,
-      [id]: value
-    })
-  };
+    const handleChange = (event: SelectChangeEvent) => {
+        const value = event.target.value as string
+        setItem({
+            ...form,
+            [id]: value
+        })
+    };
 
-  return (
-    <Box sx={{ minWidth: 120 }}>
-      <FormControl fullWidth>
-        <InputLabel id="demo-simple-select-label">Age</InputLabel>
-        <Select
-          labelId={id}
-          id={id}
-          value={item}
-          label={label}
-          onChange={handleChange}
-        >
-          {options.map(option => <MenuItem value={option.value}>{option.label}</MenuItem>)}
-        </Select>
-      </FormControl>
-    </Box>
-  );
+    return (
+        <Box sx={{ minWidth: 120 }}>
+            <FormControl fullWidth>
+                <InputLabel id="demo-simple-select-label">Age</InputLabel>
+                <Select
+                    labelId={id}
+                    id={id}
+                    value={item}
+                    label={label}
+                    onChange={handleChange}
+                >
+                    {options.map(option => <MenuItem value={option.value}>{option.label}</MenuItem>)}
+                </Select>
+            </FormControl>
+        </Box>
+    );
 }
 
 
 export default function Create() {
-  const addInstance = useStore(store => store.addInstance)
+    const addInstance = useStore(store => store.addInstance)
 
-  let navigate = useNavigate();
-  const [form, setForm] = useState({
-    instanceType: 'g5.2xlarge',
-    storage: "512",
-    spot: false,
-    region: 'us-east-1',
-  })
-
-  const instanceTypes = [
-    {value: 'g5.2xlarge', label: 'g5.2xlarge'},
-    {value: 'g5.xlarge', label: 'g5.xlarge'},
-    {value: 'p2.xlarge', label: 'p2.xlarge'},
-  ]
-
-  function changeText(event: any) {
-    const id = event.target.id
-    const value = event.target.value
-    setForm({
-      ...form,
-      [id]: value
+    let navigate = useNavigate();
+    const [form, setForm] = useState({
+        instanceType: 'g5.2xlarge',
+        storage: "512",
+        spot: false,
+        region: 'us-east-1',
     })
-  }
 
-  function changeSpot(event: any) {
-    setForm({...form, spot: !form.spot})
-  }
+    const instanceTypes = [
+        {value: 'g5.2xlarge', label: 'g5.2xlarge'},
+        {value: 'g5.xlarge', label: 'g5.xlarge'},
+        {value: 'p2.xlarge', label: 'p2.xlarge'},
+    ]
 
-  async function save() {
-    // POST to /instances this form, comment out below code
-    // HTTP
-    const result = await fetch({
-      url: "http://localhost:3000/instances",
-      method: "POST",
-      body: JSON.stringify(form)
-    })
-    // addInstance({
-    //   ...form,
-    //   instanceId: '123',
-    //   dateCreated: new Date().toDateString()
-    // })
-    navigate(`/instances`);
-  }
+    function changeText(event: any) {
+        const id = event.target.id
+        const value = event.target.value
+        setForm({
+            ...form,
+            [id]: value
+        })
+    }
 
-  return <div>
-    <Box
-      component="form"
-      sx={{
-        '& > :not(style)': { m: 1 },
-      }}
-      noValidate
-      autoComplete="off"
-    >
-      <BasicSelect
-        form={form}
-        id="instanceType"
-        label="Instance Type"
-        item={form.instanceType}
-        setItem={setForm}
-        options={instanceTypes}
-      />
-      {/*<TextField id="instanceType" label="Instance Type" variant="outlined" />*/}
-      <TextField
-        fullWidth={true}
-        id="storage"
-        label="Storage"
-        variant="outlined"
-        value={form.storage}
-        onChange={changeText}
-      />
-      <FormGroup>
-        <FormControlLabel
-          control={<Checkbox
-            checked={form.spot}
-            onChange={changeSpot}
-          />}
-          label="Spot Instance"
-        />
-      </FormGroup>
-      <TextField
-        fullWidth={true}
-        id="region"
-        label="Region"
-        variant="outlined"
-        onChange={changeText}
-      />
-      <Button
-        variant="contained"
-        onClick={save}
-      >Save</Button>
-    </Box>
-  </div>
+    function save() {
+
+        addInstance({
+            ...form,
+            instanceId: '666',
+            dateCreated: new Date().toDateString()
+        })
+        navigate(`/instances`);
+    }
+
+    return <div>
+        <Box
+            component="form"
+            sx={{
+                '& > :not(style)': { m: 1 },
+            }}
+            noValidate
+            autoComplete="off"
+        >
+            <BasicSelect
+                form={form}
+                id="instanceType"
+                label="Instance Type"
+                item={form.instanceType}
+                setItem={setForm}
+                options={instanceTypes}
+            />
+            {/*<TextField id="instanceType" label="Instance Type" variant="outlined" />*/}
+            <TextField
+                fullWidth={true}
+                id="storage"
+                label="Storage"
+                variant="outlined"
+                value={form.storage}
+                onChange={changeText}
+            />
+            <TextField
+                fullWidth={true}
+                id="spot"
+                label="Spot"
+                variant="outlined"
+                onChange={changeText}
+            />
+            <TextField
+                fullWidth={true}
+                id="region"
+                label="Region"
+                variant="outlined"
+                onChange={changeText}
+            />
+            <Button
+                variant="contained"
+                onClick={save}
+            >Save</Button>
+        </Box>
+    </div>
 }
