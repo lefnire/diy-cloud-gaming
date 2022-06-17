@@ -14,6 +14,7 @@
     "@types/node": "^16.11.38",
     "@types/react": "^18.0.10",
     "@types/react-dom": "^18.0.5",
+    "aws-amplify": "^4.3.25",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
     "react-hook-form": "^7.31.3",
