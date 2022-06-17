@@ -4,7 +4,7 @@ import {APIGatewayProxyWithCognitoAuthorizerHandler} from "aws-lambda";
 
 export const main = handler(async (event) => {
   const params = {
-    TableName: process.env.INSTANCES_TABLE,
+    TableName: process.env.TABLE_NAME,
     // 'KeyConditionExpression' defines the condition for the query
     // - 'userId = :userId': only return items with matching 'userId'
     //   partition key

@@ -1,23 +1,22 @@
-import { StackContext, Api, Table, ReactStaticSite. Auth } from "@serverless-stack/resources";
+import {
+  StackContext,
+  Api,
+  Table,
+  ReactStaticSite,
+  Auth,
+  Bucket
+} from "@serverless-stack/resources";
+
+const DOMAIN = 'diy-cloud-box.com'
 
 export function Diy(context: StackContext) {
-  const { stack } = context
-  // cognito: user logins
-  // frontend: <done> -> s3, cloudfront
-  // dynamodb (like a spreadsheet): database: user accounts, server lists, friends lists,
-  // backend: lambda: typescript -> turn on, off servers; take snapshots; share with friends
-  // -- manage EC2 instances (VPCs, Security Groups)
-
   const tables = createTables(context)
-  const api = createApi(context, tables)
-  const auth = createAuth(context, api)
-  const frontend = createFrontend(context, api, auth)
+  const api = createApi(context, {tables})
+  const auth = createAuth(context, {api})
+  const frontend = createFrontend(context, {api, auth})
 }
 
-type TableObj = Record<string, Table> // {[k: string]: Table}
-
-function createTables({ stack }: StackContext ): TableObj {
-
+function createTables({ stack }: StackContext ): Table[] {
   const instances = new Table(stack, "Instances", {
     fields: {
       userId: "string",
@@ -39,68 +38,93 @@ function createTables({ stack }: StackContext ): TableObj {
     }
   })
 
-  return {
+  return [
     instances,
     snapshots
-  }
+  ]
 }
 
-function createApi({stack}: StackContext, tables: TableObj): Api {
-  // ApiGateway
-  // - Lambda1
-  // - Lambda2
-
-  // Create the API
+function createApi(
+  {stack, app}: StackContext,
+  {tables}: {tables: Table[]}
+): Api {
+  const tableNames = tables!.reduce((m, t) => ({
+    ...m,
+    [`${t.tableName.toUpperCase()}_TABLE`]: t.tableName
+  }), {})
   const api = new Api(stack, "Api", {
+    customDomain: app.stage === "prod" ? `api.${DOMAIN}` : undefined,
     defaults: {
       authorizer: "iam",
       function: {
-        permissions: [tables.instances, tables.snapshots],
+        permissions: tables,
         environment: {
-          SNAPSHOTS_TABLE: tables.snapshots.tableName,
-          INSTANCES_TABLE: tables.instances.tableName,
+          ...tableNames,
+          STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY || "",
         },
       },
     },
     routes: {
       "GET /instances": "functions/instances/list.handler", // HTTP Verbs (http "protocol")
+      // "GET /instances/{id}": "functions/instances/get.handler",
       "POST /instances": "functions/instances/create.handler",
     },
   })
 
-  // Show the API endpoint in the output
-  // asldkfjalfkjadsflkj.execute-url.aws.com
   stack.addOutputs({
-    ApiEndpoint: api.url,
+    ApiEndpoint: api.customDomainUrl || api.url,
   })
   return api
 }
 
-function createFrontend({stack}: StackContext, api: Api, auth: Auth) {
-  // diy-cloud-box.com
-  const site = new ReactStaticSite(stack, "React", {
-    path: "frontend",
-    environment: {
-      REACT_APP_API_URL: api.url,
-      REACT_APP_REGION: stack.region,
-      REACT_APP_USER_POOL_ID: auth.userPoolId,
-      REACT_APP_USER_POOL_CLIENT_ID: auth.userPoolClientId,
-      REACT_APP_IDENTITY_POOL_ID: auth.cognitoIdentityPoolId
-    }
-  })
+function createFrontend(
+  { stack, app }: StackContext,
+  {api, bucket, auth}: {api: Api, bucket?: Bucket, auth: Auth}
+) {
 
-  // Show the API endpoint in the output
-  // asdlkfjads.cloudfront.net
+  // Define our React app
+  const site = new ReactStaticSite(stack, "ReactSite", {
+    path: "frontend",
+    customDomain:
+      app.stage === "prod" ? DOMAIN : undefined,
+    // Pass in our environment variables
+    environment: {
+      REACT_APP_API_URL: api.customDomainUrl || api.url,
+      REACT_APP_REGION: app.region,
+      // REACT_APP_BUCKET: bucket.bucketName,
+      REACT_APP_USER_POOL_ID: auth.userPoolId,
+      REACT_APP_IDENTITY_POOL_ID: auth.cognitoIdentityPoolId,
+      REACT_APP_USER_POOL_CLIENT_ID: auth.userPoolClientId,
+    },
+  });
+
+  // Show the url in the output
   stack.addOutputs({
-    FrontendUrl: site.url
-  })
-  return site
+    SiteUrl: site.customDomainUrl || site.url,
+  });
 }
 
-function createAuth({stack, app}: StackContext, api: Api) {
+function createAuth(
+  { stack, app }: StackContext,
+  { api }: {api: Api}
+): Auth {
+  // Create a Cognito User Pool and Identity Pool
   const auth = new Auth(stack, "Auth", {
     login: ["email"],
-  })
+  });
+
+  auth.attachPermissionsForAuthUsers([
+    // Allow access to the API
+    api,
+    // Policy granting access to a specific folder in the bucket
+    // new iam.PolicyStatement({
+    //   actions: ["s3:*"],
+    //   effect: iam.Effect.ALLOW,
+    //   resources: [
+    //     bucket.bucketArn + "/private/${cognito-identity.amazonaws.com:sub}/*",
+    //   ],
+    // }),
+  ]);
 
   // Show the auth resources in the output
   stack.addOutputs({
@@ -112,3 +136,19 @@ function createAuth({stack, app}: StackContext, api: Api) {
 
   return auth
 }
+
+export function createBucket(
+  { stack }: StackContext
+) {
+  return new Bucket(stack, "Uploads", {
+    cors: [
+      {
+        maxAge: "1 day",
+        allowedOrigins: ["*"],
+        allowedHeaders: ["*"],
+        allowedMethods: ["GET", "PUT", "POST", "DELETE", "HEAD"],
+      },
+    ],
+  });
+}
+

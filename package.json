@@ -12,8 +12,8 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@serverless-stack/cli": "^1.2.20",
-    "@serverless-stack/resources": "^1.2.20",
+    "@serverless-stack/cli": "^1.2.25",
+    "@serverless-stack/resources": "^1.2.25",
     "@tsconfig/node16": "^1.0.3",
     "aws-cdk-lib": "2.24.0",
     "typescript": "^4.7.3",

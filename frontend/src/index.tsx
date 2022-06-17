@@ -1,15 +1,24 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+import React from "react";
+import { createRoot } from "react-dom/client";
+import Index from "components/Index";
+import reportWebVitals from "./reportWebVitals";
+import { BrowserRouter as Router } from "react-router-dom";
+import { initSentry } from "./lib/errors";
+import {setup as initAws} from "./lib/aws/setup";
+import CssBaseline from "@mui/material/CssBaseline";
 
-const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
-);
+const container = document.getElementById("root");
+const root = createRoot(container!);
+
+initAws()
+initSentry()
+
 root.render(
   <React.StrictMode>
-    <App />
+    <Router>
+      <CssBaseline />
+      <Index />
+    </Router>
   </React.StrictMode>
 );
 
