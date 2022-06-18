@@ -30,6 +30,7 @@ export const InstanceRequest = InstanceForm.extend({
 export type InstanceRequest = z.infer<typeof InstanceRequest>
 
 export const Instance = InstanceForm.extend({
+  id: z.string(),
   createdAt: z.number(),
   instanceId: z.string()
 })

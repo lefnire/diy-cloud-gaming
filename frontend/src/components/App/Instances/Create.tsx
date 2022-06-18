@@ -13,11 +13,15 @@ import {useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod/dist/zod";
 import Stack from "@mui/material/Stack";
 import {LoadingButton} from "@mui/lab";
-import {onError} from "../../../lib/errors";
+import {onError} from "lib/errors";
 import MenuItem from "@mui/material/MenuItem";
 
+// mui - webform DESIGN easier
+// react-hook-form - making webforms FUNCTION easier
+// zod - data structure of our forms (client-side, server-side)
 
 export default function Create() {
+  const nav = useNavigate()
   const [loading, setLoading] = useState(false)
   const { register, handleSubmit, formState: { errors } } = useForm<InstanceForm>({
     resolver: zodResolver(InstanceForm),
@@ -29,11 +33,12 @@ export default function Create() {
     }
   })
 
-  const nav = useNavigate()
-
   async function onSubmit(form: InstanceForm) {
     setLoading(true)
     try {
+      // aws-amplify.API
+      // POST = "create something on the server"
+      //
       await API.post("instances", "/instances", {
         body: form,
       })

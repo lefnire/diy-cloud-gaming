@@ -1,6 +1,5 @@
 import handler from "util/handler";
 import dynamoDb from "util/dynamodb";
-import {APIGatewayProxyWithCognitoAuthorizerHandler} from "aws-lambda";
 
 export const main = handler(async (event) => {
   const params = {

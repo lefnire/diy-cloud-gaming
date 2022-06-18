@@ -7,7 +7,7 @@ interface Store {
   setAuthenticated: (authenticated: boolean) => void
 
   instances: Instance[]
-  addInstance: (instance: InstanceForm) => void
+  setInstances: (instances: Instance[]) => void
 
   friends: Friend[]
   addFriend: (friend: Friend) => void
@@ -29,27 +29,8 @@ const useStore = create(persist<Store>(
     },
     setUser: (user: User) => set(state => ({user})),
 
-    instances: [
-      {
-        instanceId: '666',
-        instanceType: 'g5.2xlarge',
-        storage: 512,
-        spot: true,
-        region: 'us-west-2',
-        createdAt: Date.now()
-      },
-      {
-        instanceId: '420',
-        instanceType: 'g5.2xlarge',
-        storage: 384,
-        spot: true,
-        region: 'us-east-1',
-        createdAt: Date.now()
-      },
-    ],
-    addInstance: (instance) => set(state => ({
-      // instances: [...state.instances, instance]
-    })),
+    instances: [],
+    setInstances: (instances) => set({instances}),
 
     friends: [
       {email: "x@y.com", username: "lefnire", online: true},

@@ -1,27 +1,28 @@
 import {v4} from "uuid"
-import handler_ from "util/handler";
+import handler from "util/handler";
 import dynamoDb from "util/dynamodb";
 import {InstanceForm, InstanceRequest, Instance} from '../../../frontend/src/store/schemas'
 // import {createServer} from './ec2'
 
-export const handler = handler_(async (event) => {
+export const main = handler(async (event) => {
   const form = InstanceForm.parse(JSON.parse(event.body!))
-  const id = v4()
+  const id = v4() // database id, NOT instanceId (from ec2.createInstance)
   const userId = event.requestContext.authorizer.iam.cognitoIdentity.identityId
 
+  const Item = {
+    ...form,
+    id,
+    userId,
+    state: "pending",
+    createdAt: Date.now(),
+    instanceId: null
+  }
   const tableRow = await dynamoDb.put({
     TableName: process.env.INSTANCES_TABLE,
-    Item: {
-      ...form,
-      id,
-      userId,
-      state: "pending",
-      createdAt: Date.now(),
-      instanceId: null
-    }
+    Item,
   });
 
-  return {}
+  return Item
 
   // const actualServer = await createServer({
   //   ...form,

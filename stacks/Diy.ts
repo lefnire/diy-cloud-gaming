@@ -64,9 +64,9 @@ function createApi(
       },
     },
     routes: {
-      // "GET /instances": "functions/instances/list.handler", // HTTP Verbs (http "protocol")
-      // "GET /instances/{id}": "functions/instances/get.handler",
-      "POST /instances": "functions/instances/create.handler",
+      "GET /instances": "functions/instances/list.main", // HTTP Verbs (http "protocol")
+      // "GET /instances/{id}": "functions/instances/get.main",
+      "POST /instances": "functions/instances/create.main",
     },
   })
 
