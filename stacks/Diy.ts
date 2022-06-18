@@ -16,10 +16,12 @@ export function Diy(context: StackContext) {
   const frontend = createFrontend(context, {api, auth})
 }
 
-function createTables({ stack }: StackContext ): Table[] {
-  const instances = new Table(stack, "Instances", {
+function createTables({ stack }: StackContext ): Record<string, Table> {
+  const instances = new Table(stack, "Instances3", {
     fields: {
       userId: "string",
+      id: "string",
+      state: "string", // pending | starting | start | stopped | etc
       instanceId: "string", // comes from EC2 (aws-js-sdk)
       storage: "string", // 512 - EBS Volume
       instanceType: "string", // g5.2xlarge
@@ -27,7 +29,7 @@ function createTables({ stack }: StackContext ): Table[] {
       region: "string", // us-east-1
       createdAt: "number",
     },
-    primaryIndex: { partitionKey: "userId", sortKey: "instanceId" },
+    primaryIndex: { partitionKey: "userId", sortKey: "id" },
   })
 
   const snapshots = new Table(stack, "Snapshots", {
@@ -39,28 +41,24 @@ function createTables({ stack }: StackContext ): Table[] {
     primaryIndex: { partitionKey: "instanceId", sortKey: "snapshotId" },
   })
 
-  return [
+  return {
     instances,
     snapshots
-  ]
+  }
 }
 
 function createApi(
   {stack, app}: StackContext,
-  {tables}: {tables: Table[]}
+  {tables}: {tables: Record<string, Table>}
 ): Api {
-  const tableNames = tables!.reduce((m, t) => ({
-    ...m,
-    [`${t.tableName.toUpperCase()}_TABLE`]: t.tableName
-  }), {})
   const api = new Api(stack, "Api", {
     customDomain: app.stage === "prod" ? `api.${DOMAIN}` : undefined,
     defaults: {
       authorizer: "iam",
       function: {
-        permissions: tables,
+        permissions: [tables.instances],
         environment: {
-          ...tableNames,
+          INSTANCES_TABLE: tables.instances.tableName,
           STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY || "",
         },
       },
@@ -68,7 +66,7 @@ function createApi(
     routes: {
       // "GET /instances": "functions/instances/list.handler", // HTTP Verbs (http "protocol")
       // "GET /instances/{id}": "functions/instances/get.handler",
-      // "POST /instances": "functions/instances/create.handler",
+      "POST /instances": "functions/instances/create.handler",
     },
   })
 

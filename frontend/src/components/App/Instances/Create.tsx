@@ -2,151 +2,91 @@ import React, {useState, useEffect} from 'react'
 import { useNavigate } from "react-router-dom";
 import useStore from 'store'
 
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardActions from '@mui/material/CardActions';
-import CardContent from '@mui/material/CardContent';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
+import { API } from "aws-amplify";
 import TextField from '@mui/material/TextField';
-import InputLabel from '@mui/material/InputLabel';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
 import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 
-
-interface BasicSelectProps {
-  id: string
-  label: string
-  item: any
-  setItem: any
-  options: {value: string, label: string}[]
-  form: any
-}
-
-function BasicSelect({id, form, label, item, setItem, options}: BasicSelectProps) {
-  const handleChange = (event: SelectChangeEvent) => {
-    const value = event.target.value as string
-    setItem({
-      ...form,
-      [id]: value
-    })
-  };
-
-  return (
-    <Box sx={{ minWidth: 120 }}>
-      <FormControl fullWidth>
-        <InputLabel id="demo-simple-select-label">Age</InputLabel>
-        <Select
-          labelId={id}
-          id={id}
-          value={item}
-          label={label}
-          onChange={handleChange}
-        >
-          {options.map(option => <MenuItem value={option.value}>{option.label}</MenuItem>)}
-        </Select>
-      </FormControl>
-    </Box>
-  );
-}
+import {InstanceForm} from 'store/schemas'
+import {useForm} from "react-hook-form";
+import {zodResolver} from "@hookform/resolvers/zod/dist/zod";
+import Stack from "@mui/material/Stack";
+import {LoadingButton} from "@mui/lab";
+import {onError} from "../../../lib/errors";
+import MenuItem from "@mui/material/MenuItem";
 
 
 export default function Create() {
-  const addInstance = useStore(store => store.addInstance)
-
-  let navigate = useNavigate();
-  const [form, setForm] = useState({
-    instanceType: 'g5.2xlarge',
-    storage: "512",
-    spot: false,
-    region: 'us-east-1',
+  const [loading, setLoading] = useState(false)
+  const { register, handleSubmit, formState: { errors } } = useForm<InstanceForm>({
+    resolver: zodResolver(InstanceForm),
+    defaultValues: {
+      instanceType: "g5.2xlarge",
+      storage: 512,
+      spot: false,
+      region: 'us-east-1'
+    }
   })
 
-  const instanceTypes = [
-    {value: 'g5.2xlarge', label: 'g5.2xlarge'},
-    {value: 'g5.xlarge', label: 'g5.xlarge'},
-    {value: 'p2.xlarge', label: 'p2.xlarge'},
-  ]
+  const nav = useNavigate()
 
-  function changeText(event: any) {
-    const id = event.target.id
-    const value = event.target.value
-    setForm({
-      ...form,
-      [id]: value
-    })
+  async function onSubmit(form: InstanceForm) {
+    setLoading(true)
+    try {
+      await API.post("instances", "/instances", {
+        body: form,
+      })
+      nav(`/instances`);
+    } catch (e) {
+      onError(e)
+    }
+    setLoading(false)
   }
 
-  function changeSpot(event: any) {
-    setForm({...form, spot: !form.spot})
-  }
-
-  async function save() {
-    // POST to /instances this form, comment out below code
-    // HTTP
-    // const result = await fetch({
-    //   url: process.env.REACT_APP_API!,
-    //   method: "POST",
-    //   body: JSON.stringify(form)
-    // })
-    // addInstance({
-    //   ...form,
-    //   instanceId: '123',
-    //   dateCreated: new Date().toDateString()
-    // })
-    navigate(`/instances`);
-  }
-
-  return <div>
-    <Box
+  return (
+    <Stack
       component="form"
-      sx={{
-        '& > :not(style)': { m: 1 },
-      }}
+      spacing={3}
       noValidate
       autoComplete="off"
+      onSubmit={handleSubmit(onSubmit)}
     >
-      <BasicSelect
-        form={form}
-        id="instanceType"
+      <TextField
+        select
         label="Instance Type"
-        item={form.instanceType}
-        setItem={setForm}
-        options={instanceTypes}
-      />
-      {/*<TextField id="instanceType" label="Instance Type" variant="outlined" />*/}
+        {...register("instanceType")}
+      >
+        {[
+          {k: 'g5.2xlarge', v: 'g5.2xlarge'},
+          {k: 'g5.xlarge', v: 'g5.xlarge'},
+          {k: 'p2.xlarge', v: 'p2.xlarge'},
+        ].map(({k, v}) => <MenuItem key={k} value={k}>{v}</MenuItem>)}
+      </TextField>
       <TextField
         fullWidth={true}
-        id="storage"
         label="Storage"
         variant="outlined"
-        value={form.storage}
-        onChange={changeText}
+        type="number"
+        {...register("storage")}
       />
       <FormGroup>
         <FormControlLabel
-          control={<Checkbox
-            checked={form.spot}
-            onChange={changeSpot}
-          />}
+          control={<Checkbox {...register("spot")} />}
           label="Spot Instance"
         />
       </FormGroup>
       <TextField
         fullWidth={true}
-        id="region"
         label="Region"
         variant="outlined"
-        onChange={changeText}
+        {...register("region")}
       />
-      <Button
+      <LoadingButton
+        loading={loading}
         variant="contained"
-        onClick={save}
-      >Save</Button>
-    </Box>
-  </div>
+        type="submit"
+      >Save</LoadingButton>
+    </Stack>
+  )
 }

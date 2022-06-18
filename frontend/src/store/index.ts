@@ -1,6 +1,6 @@
 import create from 'zustand'
 import {persist} from "zustand/middleware"
-import {User, Friend, InstanceForm, Instance} from '../../../common/schemas'
+import {User, Friend, InstanceForm, Instance} from './schemas'
 
 interface Store {
   authenticated: boolean
