@@ -8,6 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import {LoadingButton} from "@mui/lab";
+import Stack from "@mui/material/Stack";
 
 const LoginForm = z.object({
   email: z.string().email(),
@@ -34,7 +35,12 @@ export default function Login() {
   }
 
   return (
-    <Box component="form" onSubmit={handleSubmit(onSubmit)}>
+    <Stack
+      component="form"
+      spacing={3}
+      noValidate
+      onSubmit={handleSubmit(onSubmit)}
+    >
       <TextField
         {...register("email")}
         label="Email"
@@ -51,6 +57,6 @@ export default function Login() {
         variant="outlined"
         type="submit"
       >Login</LoadingButton>
-    </Box>
+    </Stack>
   );
 }

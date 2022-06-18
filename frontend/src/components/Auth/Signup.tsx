@@ -7,6 +7,7 @@ import {useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import useStore from "../../store";
 import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import LoadingButton from "@mui/lab/LoadingButton";
 
@@ -79,7 +80,13 @@ export default function Signup() {
 
   function renderConfirm() {
     const {register, handleSubmit} = confirmForm
-    return <Box component="form" onSubmit={handleSubmit(submitConfirm)}>
+    return <Stack
+      component="form"
+      spacing={3}
+      noValidate
+      autoComplete="off"
+      onSubmit={handleSubmit(submitConfirm)}
+    >
       <TextField
         {...register("confirmationCode")}
         label="Confirmation Code"
@@ -95,12 +102,17 @@ export default function Signup() {
       >
         Verify
       </LoadingButton>
-    </Box>
+    </Stack>
   }
 
   function renderForm() {
     const {register, handleSubmit} = signupForm
-    return <Box component="form" onSubmit={handleSubmit(submitSignup)}>
+    return <Stack
+      component="form"
+      spacing={3}
+      noValidate
+      onSubmit={handleSubmit(submitSignup)}
+    >
       <TextField
         {...register("email")}
         label="Email"
@@ -126,7 +138,7 @@ export default function Signup() {
       >
         Signup
       </LoadingButton>
-    </Box>
+    </Stack>
   }
 
   return newUser === null ? renderForm() : renderConfirm()

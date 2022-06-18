@@ -67,13 +67,12 @@ const DrawerHeader = styled('div')(({theme}) => ({
 
 interface Props {
   title: string
-  children: React.ReactElement
-  sideBarLinks: React.ReactElement[]
-  appBarLinks: React.ReactElement[]
+  sidebar: React.ReactElement
+  headerLinks: React.ReactElement[]
 }
 
 export default function Container(
-  {title, children, sideBarLinks, appBarLinks}: Props
+  {title, children, sidebar, headerLinks}: React.PropsWithChildren<Props>
 ) {
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
@@ -108,7 +107,7 @@ export default function Container(
           >
             {title}
           </Typography>
-          {appBarLinks}
+          {headerLinks}
         </Toolbar>
       </AppBar>
       <Drawer
@@ -131,16 +130,12 @@ export default function Container(
         </DrawerHeader>
         <Divider/>
         <List>
-          {sideBarLinks}
+          {sidebar}
         </List>
       </Drawer>
       <Main open={open}>
         <DrawerHeader/>
-
-        {/* App Content */}
         {children}
-
-
       </Main>
     </Box>
   );

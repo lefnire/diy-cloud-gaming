@@ -3,9 +3,7 @@ import {persist} from "zustand/middleware"
 import {User, Friend, InstanceForm, Instance} from '../../../common/schemas'
 
 interface Store {
-  authenticating: boolean
   authenticated: boolean
-  setAuthenticating: (authenticating: boolean) => void
   setAuthenticated: (authenticated: boolean) => void
 
   instances: Instance[]
@@ -22,9 +20,7 @@ interface Store {
 // const [loggedIn, setLoggedIn] = useState(false)
 const useStore = create(persist<Store>(
   (set, get) => ({
-    authenticating: true,
     authenticated: false,
-    setAuthenticating: (authenticating) => set(state => ({authenticating})),
     setAuthenticated: (authenticated) => set(state => ({authenticated})),
 
     user: {

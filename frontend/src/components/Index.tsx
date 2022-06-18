@@ -26,12 +26,15 @@ import Account from "components/App/Account/Account";
 import Home from "components/About/Home";
 import About from "components/About";
 import NotFound from "components/NotFound";
+import useCheckAuth from "./Auth/useCheckAuth";
+import App from "./App";
 
 const TITLE = "DIY Cloud Box"
 
-function ContainerWithLinks() {
+export default function Index() {
   let nav = useNavigate()
   const {pathname} = useLocation()
+  const authenticating = useCheckAuth()
   const authenticated = useStore(store => store.authenticated)
   const setAuthenticated = useStore(store => store.setAuthenticated)
 
@@ -80,80 +83,33 @@ function ContainerWithLinks() {
     </ListItem>
   ))
 
-  return <Drawer
-    title={TITLE}
-    sideBarLinks={sideBarLinks}
-    appBarLinks={appBarLinks}
-  >
-    <Outlet/>
-  </Drawer>
-}
-
-function RoutesWrap() {
-  const authenticated = useStore(store => store.authenticated)
-  // If we want redirect from unauth routes, see https://github.com/serverless-stack/demo-notes-app
-  // Just gonna do hard-refresh for simplicity
-  // return <AuthenticatedRoute><Settings /></AuthenticatedRoute>
-  return (
-    <Routes>
-      <Route path="/" element={<ContainerWithLinks />}>
-        {authenticated ? <>
-          <Route index element={<Dashboard/>}/>
-          <Route path="instances">
-            <Instances />
-          </Route>
-          <Route path="friends">
-            <Friends />
-          </Route>
-          <Route path="account">
-            <Route index element={<Account/>}/>
-            {/*<Route path="billing" element={<Billing/>}/>*/}
-          </Route>
-        </> : <>
-          <Route index element={<Home/>}/>
-          <Route path="auth" element={<Login />} />
-        </>}
-        <Route path="about">
-          <About />
-        </Route>
-      </Route>
+  function renderContent() {
+    if (authenticating) {
+      return null
+    }
+    // If we want redirect from unauth routes, see https://github.com/serverless-stack/demo-notes-app
+    // Just gonna do hard-refresh for simplicity
+    // return <AuthenticatedRoute><Settings /></AuthenticatedRoute>
+    return <Routes>
+      <Route path="about/*" element={<About />} />
+      {authenticated ? <>
+        <Route path="/*" element={<App />} />
+      </> : <>
+        <Route index element={<Home/>}/>
+        <Route path="auth" element={<Login />} />
+      </>}
       {/* Finally, catch all unmatched routes */}
       <Route path="*" element={<NotFound/>}/>
     </Routes>
-  );
-}
-
-function AuthWrap() {
-  const nav = useNavigate();
-  const authenticating = useStore(store => store.authenticating)
-  const setAuthenticating = useStore(store => store.setAuthenticating)
-  const setAuthenticated = useStore(store => store.setAuthenticated)
-
-  useEffect(() => {
-    onLoad();
-  }, []);
-
-  async function onLoad() {
-    try {
-      await Auth.currentSession();
-      setAuthenticated(true);
-    } catch (e) {
-      if (e !== "No current user") {
-        onError(e);
-      }
-    }
-    setAuthenticating(false);
   }
 
-  return <>
+  return <Drawer
+    title={TITLE}
+    sidebar={<>{sideBarLinks}</>}
+    headerLinks={appBarLinks}
+  >
     <ErrorBoundary>
-      {authenticating ? <>
-        <Typography variant="h1">Authenticating</Typography>
-      </> : <>
-        <RoutesWrap />
-      </>}
+      {renderContent()}
     </ErrorBoundary>
-  </>
+  </Drawer>
 }
-
-export default AuthWrap
