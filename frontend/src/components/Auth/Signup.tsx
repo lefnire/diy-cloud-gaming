@@ -1,63 +1,56 @@
 import React, { useState } from "react";
 import { Auth } from "aws-amplify";
-import Form from "react-bootstrap/Form";
 import { useNavigate } from "react-router-dom";
-import LoaderButton from "../components/LoaderButton";
-import { useAppContext } from "../lib/contextLib";
-import { useFormFields } from "../lib/hooksLib";
-import { onError } from "../lib/errorLib";
-import "./Signup.css";
+import { onError } from "lib/errors";
+import {z} from "zod";
+import {useForm} from "react-hook-form";
+import {zodResolver} from "@hookform/resolvers/zod";
+import useStore from "../../store";
+import Box from "@mui/material/Box";
+import TextField from "@mui/material/TextField";
+import LoadingButton from "@mui/lab/LoadingButton";
 
+const SignupForm = z.object({
+  email: z.string().email(),
+  password: z.string().min(3),
+  confirmPassword: z.string().min(3),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+})
+type SignupForm = z.infer<typeof SignupForm>
+
+const ConfirmForm = z.object({
+  confirmationCode: z.string().min(1)
+})
+type ConfirmForm = z.infer<typeof ConfirmForm>
+
+interface NewUser {
+  newUser: unknown
+  email: string
+  password: string
+}
 export default function Signup() {
-  const [fields, handleFieldChange] = useFormFields({
-    email: "",
-    password: "",
-    confirmPassword: "",
-    confirmationCode: "",
+  const nav = useNavigate()
+  const [isLoading, setIsLoading] = useState(false)
+  const [newUser, setNewUser] = useState<NewUser | null>(null)
+  const setAuthenticated = useStore(store => store.setAuthenticated)
+
+  const confirmForm = useForm<ConfirmForm>({
+    resolver: zodResolver(ConfirmForm)
   });
-  const nav = useNavigate();
-  const [newUser, setNewUser] = useState(null);
-  const { setAuthenticated } = useAppContext();
-  const [isLoading, setIsLoading] = useState(false);
+  // const { register, handleSubmit, formState: { errors } } = confirmForm
+  const signupForm = useForm<SignupForm>({
+    resolver: zodResolver(SignupForm)
+  });
 
-  function validateForm() {
-    return (
-      fields.email.length > 0 &&
-      fields.password.length > 0 &&
-      fields.password === fields.confirmPassword
-    );
-  }
-
-  function validateConfirmationForm() {
-    return fields.confirmationCode.length > 0;
-  }
-
-  async function handleSubmit(event) {
-    event.preventDefault();
-
+  async function submitConfirm({confirmationCode}: ConfirmForm) {
+    if (!newUser) {return}
+    const {email, password} = newUser
     setIsLoading(true);
 
     try {
-      const newUser = await Auth.signUp({
-        username: fields.email,
-        password: fields.password,
-      });
-      setIsLoading(false);
-      setNewUser(newUser);
-    } catch (e) {
-      onError(e);
-      setIsLoading(false);
-    }
-  }
-
-  async function handleConfirmationSubmit(event) {
-    event.preventDefault();
-
-    setIsLoading(true);
-
-    try {
-      await Auth.confirmSignUp(fields.email, fields.confirmationCode);
-      await Auth.signIn(fields.email, fields.password);
+      await Auth.confirmSignUp(email, confirmationCode);
+      await Auth.signIn(email, password);
 
       setAuthenticated(true);
       nav("/");
@@ -67,78 +60,74 @@ export default function Signup() {
     }
   }
 
-  function renderConfirmationForm() {
-    return (
-      <Form onSubmit={handleConfirmationSubmit}>
-        <Form.Group controlId="confirmationCode" size="lg">
-          <Form.Label>Confirmation Code</Form.Label>
-          <Form.Control
-            autoFocus
-            type="tel"
-            onChange={handleFieldChange}
-            value={fields.confirmationCode}
-          />
-          <Form.Text muted>Please check your email for the code.</Form.Text>
-        </Form.Group>
-        <LoaderButton
-          block="true"
-          size="lg"
-          type="submit"
-          variant="success"
-          isLoading={isLoading}
-          disabled={!validateConfirmationForm()}
-        >
-          Verify
-        </LoaderButton>
-      </Form>
-    );
+  async function submitSignup(form: SignupForm) {
+    const {email, password} = form
+    setIsLoading(true);
+
+    try {
+      const newUser = await Auth.signUp({
+        username: email,
+        password,
+      })
+      setIsLoading(false)
+      setNewUser({newUser, email, password});
+    } catch (e) {
+      onError(e);
+      setIsLoading(false);
+    }
+  }
+
+  function renderConfirm() {
+    const {register, handleSubmit} = confirmForm
+    return <Box component="form" onSubmit={handleSubmit(submitConfirm)}>
+      <TextField
+        {...register("confirmationCode")}
+        label="Confirmation Code"
+        variant="outlined"
+        type="tel"
+        autoFocus
+        helperText="Please check your email for the code."
+      />
+      <LoadingButton
+        type="submit"
+        variant="outlined"
+        loading={isLoading}
+      >
+        Verify
+      </LoadingButton>
+    </Box>
   }
 
   function renderForm() {
-    return (
-      <Form onSubmit={handleSubmit}>
-        <Form.Group controlId="email" size="lg">
-          <Form.Label>Email</Form.Label>
-          <Form.Control
-            autoFocus
-            type="email"
-            value={fields.email}
-            onChange={handleFieldChange}
-          />
-        </Form.Group>
-        <Form.Group controlId="password" size="lg">
-          <Form.Label>Password</Form.Label>
-          <Form.Control
-            type="password"
-            value={fields.password}
-            onChange={handleFieldChange}
-          />
-        </Form.Group>
-        <Form.Group controlId="confirmPassword" size="lg">
-          <Form.Label>Confirm Password</Form.Label>
-          <Form.Control
-            type="password"
-            onChange={handleFieldChange}
-            value={fields.confirmPassword}
-          />
-        </Form.Group>
-        <LoaderButton
-          block="true"
-          size="lg"
-          type="submit"
-          variant="success"
-          isLoading={isLoading}
-          disabled={!validateForm()}
-        >
-          Signup
-        </LoaderButton>
-      </Form>
-    );
+    const {register, handleSubmit} = signupForm
+    return <Box component="form" onSubmit={handleSubmit(submitSignup)}>
+      <TextField
+        {...register("email")}
+        label="Email"
+        variant="outlined"
+        autoFocus
+      />
+      <TextField
+        {...register("password")}
+        label="Password"
+        variant="outlined"
+        type="password"
+      />
+      <TextField
+        {...register("confirmPassword")}
+        label="Confirm Password"
+        variant="outlined"
+        type="password"
+      />
+      <LoadingButton
+        type="submit"
+        variant="outlined"
+        loading={isLoading}
+      >
+        Signup
+      </LoadingButton>
+    </Box>
   }
 
-  return (
-    <div className="Signup">
-      {newUser === null ? renderForm() : renderConfirmationForm()}
-    </div>
-  );
+  return newUser === null ? renderForm() : renderConfirm()
 }

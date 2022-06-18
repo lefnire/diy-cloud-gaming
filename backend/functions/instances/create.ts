@@ -1,13 +1,12 @@
-import * as uuid from "uuid";
 import handler from "util/handler";
 import dynamoDb from "util/dynamodb";
-import {InstanceForm, InstanceHydrated} from '../../../common/instances'
+import {InstanceForm, InstanceFormWithUser, Instance} from '../../../common/schemas'
 import {createServer} from './ec2'
 
 export const main = handler(async (event) => {
-  const form = JSON.parse(event.body) as InstanceForm
+  const form = InstanceForm.parse(JSON.parse(event.body!))
 
-  const formWithUserId = {
+  const formWithUser: InstanceFormWithUser = {
     ...form,
     userId: event.requestContext.authorizer.iam.cognitoIdentity.identityId,
   }

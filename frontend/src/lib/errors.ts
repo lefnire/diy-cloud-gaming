@@ -23,7 +23,7 @@ export function logError(error: Error, errorInfo = null) {
   });
 }
 
-export function onError(error: Error | AuthError) {
+export function onError(error: any) {
   let errorInfo = {};
   let message = error.toString();
 

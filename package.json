@@ -23,6 +23,7 @@
     "backend"
   ],
   "dependencies": {
-    "aws-sdk": "^2.1152.0"
+    "aws-sdk": "^2.1152.0",
+    "zod": "^3.17.3"
   }
 }

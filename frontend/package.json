@@ -5,7 +5,9 @@
   "dependencies": {
     "@emotion/react": "^11.9.0",
     "@emotion/styled": "^11.8.1",
+    "@hookform/resolvers": "^2.9.1",
     "@mui/icons-material": "^5.8.2",
+    "@mui/lab": "^5.0.0-alpha.86",
     "@mui/material": "^5.8.2",
     "@sentry/browser": "^6.19.7",
     "@stripe/react-stripe-js": "^1.8.0",
