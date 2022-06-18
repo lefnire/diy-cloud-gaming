@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react'
-import useStore from '../../store'
+import useStore from 'store'
 
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
@@ -29,7 +29,7 @@ export default function List() {
                         {instance.instanceId}
                     </Typography>
                     <Typography variant="h5" component="div">
-                        {instance.dateCreated}
+                        {instance.createdAt}
                     </Typography>
                     <Typography variant="h5" component="div">
                         {instance.storage}

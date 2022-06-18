@@ -1,6 +1,6 @@
 import React from 'react'
 import TextField from "@mui/material/TextField";
-import useStore from "../../store";
+import useStore from "store";
 import Grid from "@mui/material/Grid";
 import {Link, useNavigate} from "react-router-dom";
 import Button from "@mui/material/Button";
@@ -10,14 +10,14 @@ export default function Account() {
   let navigate = useNavigate()
   const user = useStore(store => store.user)
   const setUser = useStore(store => store.setUser)
-  const setLoggedIn = useStore(store => store.setLoggedIn)
+  const setAuthenticated = useStore(store => store.setAuthenticated)
 
   function closeAccount() {
     setUser({
       email: '<deleted>',
       username: '<deleted>'
     })
-    setLoggedIn()
+    setAuthenticated(false)
     navigate("/")
   }
 

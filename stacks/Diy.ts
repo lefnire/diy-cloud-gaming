@@ -35,7 +35,8 @@ function createTables({ stack }: StackContext ): Table[] {
       instanceId: "string",
       snapshotId: "string",
       createdAt: "number"
-    }
+    },
+    primaryIndex: { partitionKey: "instanceId", sortKey: "snapshotId" },
   })
 
   return [
@@ -65,9 +66,9 @@ function createApi(
       },
     },
     routes: {
-      "GET /instances": "functions/instances/list.handler", // HTTP Verbs (http "protocol")
+      // "GET /instances": "functions/instances/list.handler", // HTTP Verbs (http "protocol")
       // "GET /instances/{id}": "functions/instances/get.handler",
-      "POST /instances": "functions/instances/create.handler",
+      // "POST /instances": "functions/instances/create.handler",
     },
   })
 

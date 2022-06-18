@@ -6,6 +6,7 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import LoginIcon from '@mui/icons-material/Login';
+import Login from 'components/Auth'
 import AccountBoxIcon from '@mui/icons-material/AccountBox';
 import StorageIcon from '@mui/icons-material/Storage';
 import {Outlet, useNavigate, Link, useLocation, Route, Routes} from "react-router-dom";
@@ -18,18 +19,12 @@ import ErrorBoundary from "components/Util/ErrorBoundary";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Dashboard from "components/App/Dashboard";
-import ListInstances from "components/App/Instances/List";
-import CreateInstance from "components/App/Instances/Create";
-import ListFriends from "components/App/Friends/List";
-import AddFriend from "components/App/Friends/Add";
+import Instances from "components/App/Instances";
+import Friends from "components/App/Friends";
 import Account from "components/App/Account/Account";
-import Billing from "components/App/Account/Billing";
+// import Billing from "components/App/Account/Billing";
 import Home from "components/About/Home";
-import About from "components/About/About";
-import Notes from "components/About/Notes";
-import StreamingSetup from "components/About/StreamingSetup";
-import V2 from "components/About/v2";
-import WhyDIY from "components/About/WhyDIY";
+import About from "components/About";
 import NotFound from "components/NotFound";
 
 const TITLE = "DIY Cloud Box"
@@ -54,7 +49,7 @@ function ContainerWithLinks() {
     ...appBarLinks,
     <Button onClick={logout} color="inherit">Logout</Button>,
   ] : [
-    <Button component={Link} to="/login" color="inherit">Login</Button>,
+    <Button component={Link} to="/auth" color="inherit">Login</Button>,
     ...appBarLinks
   ]
 
@@ -105,26 +100,21 @@ function RoutesWrap() {
         {authenticated ? <>
           <Route index element={<Dashboard/>}/>
           <Route path="instances">
-            <Route index element={<ListInstances/>}/>
-            <Route path="new" element={<CreateInstance/>}/>
+            <Instances />
           </Route>
           <Route path="friends">
-            <Route index element={<ListFriends/>}/>
-            <Route path="add" element={<AddFriend/>}/>
+            <Friends />
           </Route>
           <Route path="account">
             <Route index element={<Account/>}/>
-            <Route path="billing" element={<Billing/>}/>
+            {/*<Route path="billing" element={<Billing/>}/>*/}
           </Route>
         </> : <>
           <Route index element={<Home/>}/>
+          <Route path="auth" element={<Login />} />
         </>}
         <Route path="about">
-          <Route index element={<About/>}/>
-          <Route path="notes" element={<Notes/>}/>
-          <Route path="streaming-setup" element={<StreamingSetup/>}/>
-          <Route path="v2" element={<V2/>}/>
-          <Route path="why-diy" element={<WhyDIY/>}/>
+          <About />
         </Route>
       </Route>
       {/* Finally, catch all unmatched routes */}

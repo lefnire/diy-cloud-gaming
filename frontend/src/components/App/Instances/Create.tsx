@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react'
 import { useNavigate } from "react-router-dom";
-import useStore from '../../store'
+import useStore from 'store'
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -88,11 +88,11 @@ export default function Create() {
   async function save() {
     // POST to /instances this form, comment out below code
     // HTTP
-    const result = await fetch({
-      url: process.env.REACT_APP_API!,
-      method: "POST",
-      body: JSON.stringify(form)
-    })
+    // const result = await fetch({
+    //   url: process.env.REACT_APP_API!,
+    //   method: "POST",
+    //   body: JSON.stringify(form)
+    // })
     // addInstance({
     //   ...form,
     //   instanceId: '123',

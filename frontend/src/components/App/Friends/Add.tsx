@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react'
 import { useNavigate } from "react-router-dom";
-import useStore from '../../store'
+import useStore from 'store'
 
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';

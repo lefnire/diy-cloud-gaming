@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { BsPencilSquare } from "react-icons/bs";
-import ListGroup from "react-bootstrap/ListGroup";
-import { LinkContainer } from "react-router-bootstrap";
-import { useAppContext } from "lib/contextLib";
-import { onError } from "lib/errorLib";
+import { onError } from "lib/errors";
 import { API } from "aws-amplify";
-import "./Home.css";
+import useStore from 'store'
 
 export default function Home() {
+  return null
+}
+
+{/*
+export default function Home() {
   const [notes, setNotes] = useState([]);
-  const { authenticated } = useAppContext();
+  const authenticated = useStore(store => store.authenticated)
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -85,3 +86,4 @@ export default function Home() {
     </div>
   );
 }
+*/}

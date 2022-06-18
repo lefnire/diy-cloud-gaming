@@ -1,6 +1,5 @@
 import * as Sentry from "@sentry/browser";
-import {AuthError} from "@aws-amplify/auth/lib/Errors"
-import config from "../config";
+import config from "./config";
 
 const isLocal = process.env.NODE_ENV === "development";
 
@@ -12,7 +11,7 @@ export function initSentry() {
   Sentry.init({ dsn: config.SENTRY_DSN });
 }
 
-export function logError(error: Error, errorInfo = null) {
+export function logError(error: Error, errorInfo: any = null) {
   if (isLocal) {
     return;
   }
@@ -23,8 +22,9 @@ export function logError(error: Error, errorInfo = null) {
   });
 }
 
+// TODO figure out how to TypeScript this
 export function onError(error: any) {
-  let errorInfo = {};
+  let errorInfo: any = {};
   let message = error.toString();
 
   // Auth errors
@@ -33,7 +33,7 @@ export function onError(error: any) {
     message = error.message;
     error = new Error(message);
     // API errors
-  } else if (error.config && error.config.url) {
+  } else if (error.config?.url) {
     errorInfo.url = error.config.url;
   }
 

@@ -1,6 +1,6 @@
 import create from 'zustand'
 import {persist} from "zustand/middleware"
-import {User, Friend, InstanceForm, InstanceHydrated} from '../../../common/instances'
+import {User, Friend, InstanceForm, Instance} from '../../../common/schemas'
 
 interface Store {
   authenticating: boolean
@@ -8,7 +8,7 @@ interface Store {
   setAuthenticating: (authenticating: boolean) => void
   setAuthenticated: (authenticated: boolean) => void
 
-  instances: InstanceHydrated[]
+  instances: Instance[]
   addInstance: (instance: InstanceForm) => void
 
   friends: Friend[]
@@ -37,22 +37,22 @@ const useStore = create(persist<Store>(
       {
         instanceId: '666',
         instanceType: 'g5.2xlarge',
-        storage: "512",
+        storage: 512,
         spot: true,
         region: 'us-west-2',
-        dateCreated: '2022-05-20'
+        createdAt: Date.now()
       },
       {
         instanceId: '420',
         instanceType: 'g5.2xlarge',
-        storage: "384",
+        storage: 384,
         spot: true,
         region: 'us-east-1',
-        dateCreated: '2022-05-23'
+        createdAt: Date.now()
       },
     ],
     addInstance: (instance) => set(state => ({
-      instances: [...state.instances, instance]
+      // instances: [...state.instances, instance]
     })),
 
     friends: [
