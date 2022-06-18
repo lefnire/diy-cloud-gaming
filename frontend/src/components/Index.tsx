@@ -27,6 +27,7 @@ import Home from "components/About/Home";
 import About from "components/About";
 import NotFound from "components/NotFound";
 import useCheckAuth from "./Auth/useCheckAuth";
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import App from "./App";
 
 const TITLE = "DIY Cloud Box"
@@ -103,13 +104,22 @@ export default function Index() {
     </Routes>
   }
 
-  return <Drawer
-    title={TITLE}
-    sidebar={<>{sideBarLinks}</>}
-    headerLinks={appBarLinks}
-  >
-    <ErrorBoundary>
-      {renderContent()}
-    </ErrorBoundary>
-  </Drawer>
+  return <ThemeProvider theme={darkTheme}>
+    <Drawer
+      title={TITLE}
+      sidebar={<>{sideBarLinks}</>}
+      headerLinks={appBarLinks}
+    >
+      <ErrorBoundary>
+        {renderContent()}
+      </ErrorBoundary>
+    </Drawer>
+  </ThemeProvider>
 }
+
+
+const darkTheme = createTheme({
+  palette: {
+    mode: 'dark',
+  },
+});
