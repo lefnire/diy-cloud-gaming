@@ -1,64 +1,46 @@
-import { EC2Client,
+import {
+  EC2Client,
   CreateVpcCommand,
   CreateSubnetCommand,
-    DescribeAvailabilityZonesCommand,
-    CreateSecurityGroupCommand,
-    AuthorizeSecurityGroupIngressCommand,
-    AuthorizeSecurityGroupEgressCommand
+  DescribeAvailabilityZonesCommand,
+  CreateSecurityGroupCommand,
+  AuthorizeSecurityGroupIngressCommand,
+  AuthorizeSecurityGroupEgressCommand
 } from "@aws-sdk/client-ec2";
 
-const aws = new EC2Client({region: 'us-east-1'});
-import {Region} from './types'
+import {AugmentedRequest, Region} from './types'
 
-interface NetworkData {
-  client: EC2Client
-  userId: string
-  userIp: string
-  region: Region
-}
+export async function createNetwork(request: AugmentedRequest) {
+  const {client, Tags, userId, userIp, region} = request
 
-type NetworkDataWithTags = NetworkData & {
-  tags: {Key: string, Value: string}[]
-}
-
-
-export async function createNetwork(data: NetworkData) {
-  const {userId, userIp, region} = data
-  const Tags = [
-    {Key: "diy:userId", Value: userId}
-  ]
-
-  // TODO @Brett how to get these get the tags into the resources we're creating?
-  // TODO replace ingress user ip adderss below with userIp from above
-
-  const createdVpc = await aws.send(new CreateVpcCommand({
+  const createdVpc = await client.send(new CreateVpcCommand({
     CidrBlock: "10.97.0.0/18",
-    // TagSpecifications: {Tags}
+    TagSpecifications: [{ResourceType: "vpc", Tags}]
   }))
   const {VpcId} = createdVpc.Vpc!
 
-  const azs = await aws.send(new DescribeAvailabilityZonesCommand({}))
+  const azs = await client.send(new DescribeAvailabilityZonesCommand({}))
   const firstAvailableAz = azs.AvailabilityZones![0].ZoneId
 
-  const createdSubnet = await aws.send(new CreateSubnetCommand({
+  const createdSubnet = await client.send(new CreateSubnetCommand({
     VpcId,
     AvailabilityZone: firstAvailableAz,
-    CidrBlock: '10.97.0.0/24'
+    CidrBlock: '10.97.0.0/24',
+    TagsSpecifications: [{ResourceType: "subnet", Tags}]
   }))
 
-  const sg = await aws.send(new CreateSecurityGroupCommand({
+  const sg = await client.send(new CreateSecurityGroupCommand({
     VpcId,
     GroupName: "Gaming Security Group",
     Description: "Our Security Group",
-
+    TagSpecifications: [{ResourceType: "security-group", Tags}]
   }))
   const {GroupId} = sg
-  const authEgress = await aws.send(new AuthorizeSecurityGroupEgressCommand({
+  const authEgress = await client.send(new AuthorizeSecurityGroupEgressCommand({
     GroupId,
     CidrIp: "0.0.0.0/0",
     FromPort: -1,
-    ToPort: -1
-
+    ToPort: -1,
   }))
 
   const rules = [
@@ -70,14 +52,13 @@ export async function createNetwork(data: NetworkData) {
   ]
 
   await Promise.all(rules.map(async function CreateRule(rule) {
-    const authIngress = await aws.send(new AuthorizeSecurityGroupIngressCommand({
+    const authIngress = await client.send(new AuthorizeSecurityGroupIngressCommand({
       GroupId,
       CidrIp: "191.213.28.1/32",
       FromPort: rule.from,
       ToPort: rule.to,
       IpProtocol: "rule.protocol,",
       SourceSecurityGroupName: rule.name,
-
     }))
   }))
 }
