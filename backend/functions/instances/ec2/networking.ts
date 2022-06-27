@@ -8,9 +8,32 @@ import { EC2Client,
 } from "@aws-sdk/client-ec2";
 
 const aws = new EC2Client({region: 'us-east-1'});
-async function sampleCode() {
+import {Region} from './types'
+
+interface NetworkData {
+  client: EC2Client
+  userId: string
+  userIp: string
+  region: Region
+}
+
+type NetworkDataWithTags = NetworkData & {
+  tags: {Key: string, Value: string}[]
+}
+
+
+export async function createNetwork(data: NetworkData) {
+  const {userId, userIp, region} = data
+  const Tags = [
+    {Key: "diy:userId", Value: userId}
+  ]
+
+  // TODO @Brett how to get these get the tags into the resources we're creating?
+  // TODO replace ingress user ip adderss below with userIp from above
+
   const createdVpc = await aws.send(new CreateVpcCommand({
-    CidrBlock: "10.97.0.0/18"
+    CidrBlock: "10.97.0.0/18",
+    // TagSpecifications: {Tags}
   }))
   const {VpcId} = createdVpc.Vpc!
 
@@ -57,183 +80,4 @@ async function sampleCode() {
 
     }))
   }))
-}
-
-
-
-
-
-
-
-
-
-import {
-  EC2Client,
-  CreateVpcCommand,
-  CreateSubnetCommand,
-  DescribeAvailabilityZonesCommand,
-  CreateSecurityGroupCommand,
-  AuthorizeSecurityGroupIngressCommand,
-  AuthorizeSecurityGroupEgressCommand
-} from "@aws-sdk/client-ec2"; // ES Modules import
-const aws = new EC2Client({region: "us-east-1"});
-
-async function sampleCode() {
-  const createdVpc = await aws.send(new CreateVpcCommand({
-    CidrBlock: "10.97.0.0/18",
-  }))
-  const {VpcId} = createdVpc.Vpc!
-
-  const azs = await aws.send(new DescribeAvailabilityZonesCommand({}))
-  const firstAvailableAz = azs.AvailabilityZones![0].ZoneId
-
-  const createdSubnet = await aws.send(new CreateSubnetCommand({
-    VpcId,
-    AvailabilityZone: firstAvailableAz,
-    CidrBlock: "10.97.0.0/24"
-  }))
-
-  const sg = await aws.send(new CreateSecurityGroupCommand({
-    VpcId,
-    GroupName: "Gaming Security Group",
-    Description: "Our security group"
-  }))
-
-  const {GroupId} = sg
-
-  const authEgress = await aws.send(new AuthorizeSecurityGroupEgressCommand({
-    GroupId,
-    CidrIp: "0.0.0.0/0",
-    FromPort: -1,
-    ToPort: -1
-  }))
-
-  const rules = [
-    {from: 22, to: 22, protocol: "tcp", name: "Virtual Desktop VR"},
-    {from: 38810, to: 38840, protocol: "udp", name: "Virtual Desktop VR"},
-  ]
-
-  await Promise.all(rules.map(async (rule)  => {
-    const authIngress = await aws.send(new AuthorizeSecurityGroupIngressCommand({
-      GroupId,
-      CidrIp: "192.223.28.2/32",
-      FromPort: rule.from,
-      ToPort: rule.to,
-      IpProtocol: rule.protocol,
-
-      SourceSecurityGroupName: rule.name
-    }))
-  }))
-}
-
-
-
-
-
-
-
-
-
-import {
-  AcceptReservedInstancesExchangeQuoteCommand
-} from "@aws-sdk/client-ec2";
-import {Region} from './types'
-
-const TCP = 6
-const UDP = 17
-
-interface NetworkData {
-  client: EC2Client
-  userId: string
-  userIp: string
-  region: Region
-}
-
-type NetworkDataWithTags = NetworkData & {
-  tags: {Key: string, Value: string}[]
-}
-
-function getAvailabilityZone({client, region}: NetworkDataWithTags) {
-  // 1. Get the *available* Availability Zones for the region the user specified. The AZs which are available for
-  //    each region will be different
-  const available = client.getAvailableAvailabilityZones(region)
-
-  // 2. Use the first one I guess. They don't need more than 1 for their server, I don't think?
-  return available[0]
-}
-
-export function createVpc(data: NetworkDataWithTags) {
-  const {client, userId, userIp, region, tags} = data
-  // what to name these? maybe they name it in the webform?
-  const vpcName = `diy:${userId}:${Date.now()}`
-  const az = getAvailabilityZone(data)
-
-  return client.createVpc({
-    name: vpcName,
-    cidr: "10.97.0.0/18", // FIXME this should be dynamically generated, and incremented for each user
-    publicSubnets: ["10.97.0.0/24"],
-    azs: [az],
-    tags
-  })
-}
-
-function createSecurityGroup(data: NetworkDataWithTags, vpcId: string) {
-  const {client, userId, userIp, region, tags} = data
-  return client.createSecurityGroup({
-    name: `???`,
-    description: "Gaming security group (NICE DCV, Remote Desktop, etc)",
-    vpcId,
-    tags,
-    egressRules: ["all-all"],
-    ingressWithCidrBlocks: {
-      rules: [{
-        rule: "ssh-tcp",
-        cidr_blocks: userIp
-      }, {
-        rule: "rdp-tcp",
-        cidr_blocks: userIp
-      }, {
-        from_port: 38810,
-        to_port: 38840,
-        protocol: UDP,
-        description: "Virtual Desktop VR",
-        cidr_blocks: userIp
-      }, {
-        from_port: 38810,
-        to_port: 38840,
-        protocol: TCP,
-        description: "Virtual Desktop VR",
-        cidr_blocks: userIp
-      }, {
-        from_port: 8443,
-        to_port: 8443,
-        protocol: UDP,
-        description: "NiceDCV QUIC",
-        cidr_blocks: userIp,
-      }, {
-        from_port:  8443,
-        to_port:  8443,
-        protocol:  TCP,
-        description:  "NiceDCV QUIC",
-        cidr_blocks:  userIp,
-      }, {
-        from_port: 8000,
-        to_port: 8040,
-        protocol: UDP,
-        description: "Parsec",
-        cidr_blocks: userIp,
-      }]
-    }
-  })
-}
-
-export function createNetwork(data: NetworkData) {
-  const {client, userId, userIp, region} = data
-  const tags = [
-    {Key: "diy:userId", Value: userId}
-  ]
-  const withTags = {...data, tags}
-  const vpc = createVpc(withTags)
-  const sg = createSecurityGroup(withTags, vpc.id)
-  return vpc
 }
