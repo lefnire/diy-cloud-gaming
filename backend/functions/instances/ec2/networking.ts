@@ -69,6 +69,72 @@ async function sampleCode() {
 
 import {
   EC2Client,
+  CreateVpcCommand,
+  CreateSubnetCommand,
+  DescribeAvailabilityZonesCommand,
+  CreateSecurityGroupCommand,
+  AuthorizeSecurityGroupIngressCommand,
+  AuthorizeSecurityGroupEgressCommand
+} from "@aws-sdk/client-ec2"; // ES Modules import
+const aws = new EC2Client({region: "us-east-1"});
+
+async function sampleCode() {
+  const createdVpc = await aws.send(new CreateVpcCommand({
+    CidrBlock: "10.97.0.0/18",
+  }))
+  const {VpcId} = createdVpc.Vpc!
+
+  const azs = await aws.send(new DescribeAvailabilityZonesCommand({}))
+  const firstAvailableAz = azs.AvailabilityZones![0].ZoneId
+
+  const createdSubnet = await aws.send(new CreateSubnetCommand({
+    VpcId,
+    AvailabilityZone: firstAvailableAz,
+    CidrBlock: "10.97.0.0/24"
+  }))
+
+  const sg = await aws.send(new CreateSecurityGroupCommand({
+    VpcId,
+    GroupName: "Gaming Security Group",
+    Description: "Our security group"
+  }))
+
+  const {GroupId} = sg
+
+  const authEgress = await aws.send(new AuthorizeSecurityGroupEgressCommand({
+    GroupId,
+    CidrIp: "0.0.0.0/0",
+    FromPort: -1,
+    ToPort: -1
+  }))
+
+  const rules = [
+    {from: 22, to: 22, protocol: "tcp", name: "Virtual Desktop VR"},
+    {from: 38810, to: 38840, protocol: "udp", name: "Virtual Desktop VR"},
+  ]
+
+  await Promise.all(rules.map(async (rule)  => {
+    const authIngress = await aws.send(new AuthorizeSecurityGroupIngressCommand({
+      GroupId,
+      CidrIp: "192.223.28.2/32",
+      FromPort: rule.from,
+      ToPort: rule.to,
+      IpProtocol: rule.protocol,
+
+      SourceSecurityGroupName: rule.name
+    }))
+  }))
+}
+
+
+
+
+
+
+
+
+
+import {
   AcceptReservedInstancesExchangeQuoteCommand
 } from "@aws-sdk/client-ec2";
 import {Region} from './types'

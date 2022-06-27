@@ -119,7 +119,7 @@ export default function Index() {
 
 
 const darkTheme = createTheme({
-  palette: {
-    mode: 'dark',
-  },
+  // palette: {
+  //   mode: 'dark',
+  // },
 });
