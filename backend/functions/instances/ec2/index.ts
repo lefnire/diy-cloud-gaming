@@ -3,22 +3,21 @@ import {
 } from "@aws-sdk/client-ec2"
 
 import {Request, AugmentedRequest} from "./types"
-// import {createEc2} from './ec2'
-import {createNetwork} from './networking'
+import {createNetwork, NetworkIds} from './networking'
+import {createInstance} from './ec2'
 
 // https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/ec2-example-managing-instances.html
 
-export function createServer(form: Request)  {
-  const client = new EC2Client({region: form.region})
-  const {userId, userIp, region} = form
+export function createServer(req: Request)  {
+  const client = new EC2Client({region: req.region})
+  const {userId, userIp, region} = req
   const augmentedRequest: AugmentedRequest = {
-    ...form,
+    ...req,
     client,
     Tags: [
       {Key: "diy:userId", Value: userId}
     ]
   }
-  const network = createNetwork(augmentedRequest)
-  // const ec2 = createEc2(form, network)
-
+  const networkIds = createNetwork(augmentedRequest)
+  const ec2 = createInstance(augmentedRequest, networkIds)
 }

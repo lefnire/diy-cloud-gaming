@@ -1,5 +1,4 @@
 import {
-  EC2Client,
   CreateVpcCommand,
   CreateSubnetCommand,
   DescribeAvailabilityZonesCommand,
@@ -10,8 +9,14 @@ import {
 
 import {AugmentedRequest, Region} from './types'
 
-export async function createNetwork(request: AugmentedRequest) {
+export type NetworkIds = {VpcId: string, SubnetId: string, GroupId: string}
+export async function createNetwork(request: AugmentedRequest): Promise<NetworkIds> {
   const {client, Tags, userId, userIp, region} = request
+
+  // vpc
+  // subnet(choose availability zone)
+  // security group (ports open to user's ip)
+  // all need tags
 
   const createdVpc = await client.send(new CreateVpcCommand({
     CidrBlock: "10.97.0.0/18",
@@ -26,8 +31,9 @@ export async function createNetwork(request: AugmentedRequest) {
     VpcId,
     AvailabilityZone: firstAvailableAz,
     CidrBlock: '10.97.0.0/24',
-    TagsSpecifications: [{ResourceType: "subnet", Tags}]
+    TagSpecifications: [{ResourceType: "subnet", Tags}]
   }))
+  const {SubnetId} = createdSubnet.Subnet!
 
   const sg = await client.send(new CreateSecurityGroupCommand({
     VpcId,
@@ -36,6 +42,7 @@ export async function createNetwork(request: AugmentedRequest) {
     TagSpecifications: [{ResourceType: "security-group", Tags}]
   }))
   const {GroupId} = sg
+
   const authEgress = await client.send(new AuthorizeSecurityGroupEgressCommand({
     GroupId,
     CidrIp: "0.0.0.0/0",
@@ -61,4 +68,6 @@ export async function createNetwork(request: AugmentedRequest) {
       SourceSecurityGroupName: rule.name,
     }))
   }))
+
+  return {VpcId, SubnetId, GroupId}
 }
