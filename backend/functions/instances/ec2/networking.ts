@@ -9,9 +9,11 @@ import {
 } from "@aws-sdk/client-ec2";
 
 import {AugmentedRequest, Region} from './types'
+import {string} from "zod";
 
 export async function createNetwork(request: AugmentedRequest) {
   const {client, Tags, userId, userIp, region} = request
+// how to get these get the tags into the resources we're creating?
 
   const createdVpc = await client.send(new CreateVpcCommand({
     CidrBlock: "10.97.0.0/18",
@@ -22,14 +24,17 @@ export async function createNetwork(request: AugmentedRequest) {
   const azs = await client.send(new DescribeAvailabilityZonesCommand({}))
   const firstAvailableAz = azs.AvailabilityZones![0].ZoneId
 
-  const createdSubnet = await client.send(new CreateSubnetCommand({
+  const createSubnetRequest = await client.send(new CreateSubnetCommand({
     VpcId,
     AvailabilityZone: firstAvailableAz,
-    CidrBlock: '10.97.0.0/24',
-    TagsSpecifications: [{ResourceType: "subnet", Tags}]
+    CidrBlock: "10.97.0.0/18",
+    TagSpecifications: [{ResourceType: "subnet", Tags}]
+
+
+
   }))
-// TODO @Brett how to get these get the tags into the resources we're creating?
-  // TODO replace ingress user ip adderss below with userIp from above
+
+
   const sg = await client.send(new CreateSecurityGroupCommand({
     VpcId,
     GroupName: "Gaming Security Group",
@@ -60,6 +65,9 @@ export async function createNetwork(request: AugmentedRequest) {
       ToPort: rule.to,
       IpProtocol: "rule.protocol,",
       SourceSecurityGroupName: rule.name,
+      //replace ingress user ip address below with userIp from above
+        SourceSecurityGroupOwnerId: "userIp",
+
     }))
   }))
 }
