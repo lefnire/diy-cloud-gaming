@@ -5,12 +5,9 @@ import {InstanceForm, InstanceRequest, Instance} from '../../../frontend/src/sto
 import {createServer} from './ec2'
 
 
-async function createActualServer(form: InstanceRequest, rowEntry: any) {
+async function createActualServer(instanceRequest: InstanceRequest, rowEntry: any) {
   const {id, userId} = rowEntry
-   const actualServer = await createServer({
-    ...form,
-    userId
-  })
+   const actualServer = await createServer(instanceRequest)
 
   return await dynamoDb.update({
     TableName: process.env.INSTANCES_TABLE,
@@ -31,6 +28,8 @@ export const main = handler(async (event) => {
   const form = InstanceForm.parse(JSON.parse(event.body!))
   const id = v4() // database id, NOT instanceId (from ec2.createInstance)
   const userId = event.requestContext.authorizer.iam.cognitoIdentity.identityId
+  // const userIp = event['requestContext']['http']['sourceIp']
+  const userIp = event['requestContext']['identity']['sourceIp']
 
   const rowEntry = {
     ...form,
@@ -45,7 +44,12 @@ export const main = handler(async (event) => {
     Item: rowEntry,
   });
 
-  createActualServer()
+  const instanceRequest: InstanceRequest = {
+    ...form,
+    userId,
+    userIp
+  }
+  createActualServer(instanceRequest, rowEntry)
 
   return rowEntry
 });

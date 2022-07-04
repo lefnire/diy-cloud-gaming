@@ -2,7 +2,7 @@ import {
   RunInstancesCommand,
   DescribeImagesCommand,
   AllocateAddressCommand,
-  CreateKeyPairCommand
+  CreateKeyPairCommand, GetPasswordDataCommand
 } from "@aws-sdk/client-ec2"
 import {AugmentedRequest} from "./types"
 import {NetworkIds} from "./networking";
@@ -23,6 +23,7 @@ export async function createInstance(request: AugmentedRequest, networkIds: Netw
     Filters: [{Name: "name", Values: ["DCV-Windows-*-NVIDIA-gaming-*"]}],
   }))
   const {ImageId} = ami.Images![0] // TODO ensure this is the most recent image
+  debugger
 
   // SSH key pair (.pem file)
   const keyPair = await client.send(new CreateKeyPairCommand({
@@ -64,6 +65,15 @@ export async function createInstance(request: AugmentedRequest, networkIds: Netw
     }],
   }))
   const {InstanceId} = instance.Instances![0]
+
+  const privateKey: string = keyPair.KeyMaterial!
+
+  const passwordData = await client.send(new GetPasswordDataCommand({
+    InstanceId
+  }))
+  const password = passwordData.PasswordData!
+  const decryptedPassword = getPasswordResponse.GetDecryptedPassword(privateKey);
+  // FIXME: password is not decrypted
 
   // assign EIP to server
   // handle spot instances

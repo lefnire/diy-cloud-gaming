@@ -22,7 +22,7 @@ export async function createNetwork(request: AugmentedRequest): Promise<NetworkI
     CidrBlock: "10.97.0.0/18",
     TagSpecifications: [{ResourceType: "vpc", Tags}]
   }))
-  const {VpcId} = createdVpc.Vpc!
+  const VpcId = createdVpc.Vpc!.VpcId!
 
   const azs = await client.send(new DescribeAvailabilityZonesCommand({}))
   const firstAvailableAz = azs.AvailabilityZones![0].ZoneId
@@ -33,7 +33,7 @@ export async function createNetwork(request: AugmentedRequest): Promise<NetworkI
     CidrBlock: '10.97.0.0/24',
     TagSpecifications: [{ResourceType: "subnet", Tags}]
   }))
-  const {SubnetId} = createdSubnet.Subnet!
+  const SubnetId = createdSubnet.Subnet!.SubnetId!
 
   const sg = await client.send(new CreateSecurityGroupCommand({
     VpcId,
@@ -41,7 +41,7 @@ export async function createNetwork(request: AugmentedRequest): Promise<NetworkI
     Description: "Our Security Group",
     TagSpecifications: [{ResourceType: "security-group", Tags}]
   }))
-  const {GroupId} = sg
+  const GroupId = sg.GroupId!
 
   const authEgress = await client.send(new AuthorizeSecurityGroupEgressCommand({
     GroupId,
@@ -61,7 +61,7 @@ export async function createNetwork(request: AugmentedRequest): Promise<NetworkI
   await Promise.all(rules.map(async function CreateRule(rule) {
     const authIngress = await client.send(new AuthorizeSecurityGroupIngressCommand({
       GroupId,
-      CidrIp: "191.213.28.1/32",
+      CidrIp: `${userIp}/32`,
       FromPort: rule.from,
       ToPort: rule.to,
       IpProtocol: "rule.protocol,",
