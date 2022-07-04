@@ -76,37 +76,37 @@ export async function createInstance(request: AugmentedRequest, networkIds: Netw
     InstanceId,
   }))
 
-//   // get password
-  const [getPasswordResponse] = await client.send(new GetPasswordDataRequest({
+   const privateKey = keyPair.KeyMaterial!
+
+  const passwordData = await client.send(new GetPasswordDataCommand({
     InstanceId
   }))
-  if (getPasswordResponse.PasswordData) {
-    console.log(`Password for ${InstanceId}.': ${getPasswordResponse.PasswordData}`)
-  } else {
-    console.log(`Working on getting the password for  ${InstanceId}.`)
-  }
-}
+  const passwordEncrypted = passwordData.PasswordData!
+  const decryptedPassword = getPasswordResponse.GetDecryptedPassword(privateKey);
+  // FIXME: password is not decrypted
 
-async function createSpotInstance(request: AugmentedRequest, networkIds: NetworkIds): Promise<void> {
-  // handle spot instances
-  if (request.spotPrice) {
-    const {SpotInstanceRequestId} = await client.send(new RequestSpotInstancesCommand({
-      InstanceCount: 1,
-      LaunchSpecification: {
-        ImageId,
-        InstanceType: request.instanceType,
-        MinCount: 1,
-        MaxCount: 1,
-        KeyName,
-        TagSpecifications: [{ResourceType: "instance", Tags}],
-
-
-        SpotPrice: request.spotPrice,
-        Type: "one-time",
-        ValidUntil: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7), // 1 week
-        TagSpecifications: [{ResourceType: "spot-instance-request", Tags}],
-      }))
-    const {SpotInstanceRequestId: requestId} = requests[0]
-    console.log(`Requested spot instance with request ID ${requestId}`)
-  }
-  }
+// async function createSpotInstance(request: AugmentedRequest, networkIds: NetworkIds): Promise<void> {
+//   // handle spot instances
+//   if (!request.spotPrice) {
+//     return
+//   }
+//   const {client} = request
+//   const {SpotInstanceRequestId} = await client.send(new RequestSpotInstancesCommand({
+//     InstanceCount: 1,
+//     LaunchSpecification: {
+//       ImageId,
+//       InstanceType: request.instanceType,
+//       MinCount: 1,
+//       MaxCount: 1,
+//       KeyName,
+//       TagSpecifications: [{ResourceType: "instance", Tags}],
+//
+//
+//       SpotPrice: request.spotPrice,
+//       Type: "one-time",
+//       ValidUntil: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7), // 1 week
+//       TagSpecifications: [{ResourceType: "spot-instance-request", Tags}],
+//     }))
+//   const {SpotInstanceRequestId: requestId} = requests[0]
+//   console.log(`Requested spot instance with request ID ${requestId}`)
+// }

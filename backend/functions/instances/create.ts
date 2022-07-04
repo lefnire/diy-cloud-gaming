@@ -26,7 +26,6 @@ async function createActualServer(instanceRequest: InstanceRequest, rowEntry: an
 
 export const main = handler(async (event) => {
   const form = InstanceForm.parse(JSON.parse(event.body!))
-  const userIp = event['requestContext']['identity']['sourceIp']
   const id = v4() // database id, NOT instanceId (from ec2.createInstance)
   const userId = event.requestContext.authorizer.iam.cognitoIdentity.identityId
   // const userIp = event['requestContext']['http']['sourceIp']
