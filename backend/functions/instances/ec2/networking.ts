@@ -51,8 +51,8 @@ export async function createNetwork(request: AugmentedRequest): Promise<NetworkI
   }))
 
   const rules = [
-    {from: 38810, to: 38840, protocol: "TCP", name: "Virtual Deaktop VR"},
-    {from: 38810, to: 38840, protocol: "UDP", name: "Virtual Deaktop VR"},
+    {from: 38810, to: 38840, protocol: "TCP", name: "Virtual Desktop VR"},
+    {from: 38810, to: 38840, protocol: "UDP", name: "Virtual Desktop VR"},
     {from: 8443, to: 8443, protocol: "TCP", name: "NiceDCV"},
     {from: 8443, to: 8443, protocol: "UDP", name: "NiceDCV"},
     {from: 8000, to: 8040, protocol: "TCP", name: "Parsec"},
@@ -66,6 +66,9 @@ export async function createNetwork(request: AugmentedRequest): Promise<NetworkI
       ToPort: rule.to,
       IpProtocol: "rule.protocol,",
       SourceSecurityGroupName: rule.name,
+      //replace ingress user ip address below with userIp from above
+        //SourceSecurityGroupOwnerId: "userIp",
+
     }))
   }))
 
